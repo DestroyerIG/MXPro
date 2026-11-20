@@ -53,6 +53,7 @@
         <app-pilot-card
           [pilot]="pilot"
           [mode]="mode()"
+          [suspect]="pilot.entry.registrationId === suspectRegistrationId()"
           [highlighted]="mode() === 'lap' && pilot.entry.registrationId === session.lastPassRegistrationId()"
           (tapped)="onCardTap($event)"
         />

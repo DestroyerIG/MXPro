@@ -91,6 +91,35 @@ describe('TimingBoard (tela de pista)', () => {
     expect(action('BANDEIRADA').disabled).toBe(true);
   });
 
+  it('toque repetido (volta abaixo da mínima) é registrado, mas avisa e marca o cartão', async () => {
+    const { card, stable } = await setup();
+    card('72').click(); // volta normal (~1 min)
+    await stable();
+    expect(card('72').textContent).not.toContain('REPETIDO?');
+
+    card('72').click(); // segundo toque logo em seguida: volta de ~0 s
+    await stable();
+    expect(card('72').getAttribute('aria-label')).toContain('9 voltas'); // não descartou
+    expect(card('72').textContent).toContain('REPETIDO?');
+    expect(card('72').getAttribute('aria-label')).toContain('possível toque repetido');
+    const toast = TestBed.inject(ToastService).toasts().at(-1)!;
+    expect(toast.tone).toBe('warn');
+    expect(toast.message).toMatch(/^Volta de 0:0\d\.\d no #72, abaixo da mínima \(0:45\.000\)\. Toque repetido\?$/);
+  });
+
+  it('o Desfazer do aviso de toque repetido anula só a passagem duplicada', async () => {
+    const { card, stable } = await setup();
+    card('19').click();
+    await stable();
+    card('19').click();
+    await stable();
+    const service = TestBed.inject(ToastService);
+    service.runAction(service.toasts().at(-1)!.id);
+    await stable();
+    expect(card('19').getAttribute('aria-label')).toContain('7 voltas');
+    expect(card('19').textContent).not.toContain('REPETIDO?');
+  });
+
   it('ao reconectar, a fila é enviada e o aviso vira ONLINE', async () => {
     const { stable, statusText } = await setup();
     TestBed.inject(ConnectivityService).simulateOffline.set(false);

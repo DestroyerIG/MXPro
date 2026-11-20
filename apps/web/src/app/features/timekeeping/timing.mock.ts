@@ -17,6 +17,7 @@ export function createMockHeat(now: number): HeatInfo {
     durationMs: 20 * 60_000,
     extraLaps: 2,
     defaultPenaltyMs: 10_000,
+    minLapMs: 45_000, // "volta mínima válida 00:45.000" do escopo
   };
 }
 

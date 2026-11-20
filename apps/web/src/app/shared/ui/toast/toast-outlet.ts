@@ -4,6 +4,7 @@ import { ToastService, ToastTone } from './toast.service';
 const TONE_BORDER: Record<ToastTone, string> = {
   info: 'border-l-brand',
   ok: 'border-l-ok',
+  warn: 'border-l-warn',
   danger: 'border-l-danger',
 };
 

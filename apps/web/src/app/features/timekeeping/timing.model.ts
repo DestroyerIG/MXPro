@@ -47,4 +47,6 @@ export interface HeatInfo {
   extraLaps: number;
   /** Penalidade padrão por infração, da configuração da prova. */
   defaultPenaltyMs: number;
+  /** Volta mínima válida (config da prova). Abaixo disso a tela avisa possível toque repetido. */
+  minLapMs: number;
 }

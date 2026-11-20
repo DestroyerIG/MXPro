@@ -11,6 +11,8 @@ import { TimingSession } from '../timing-session.service';
 
 /** Começa "offline" para a demonstração bater com o PDF (OFFLINE – 14 pendentes). Só no mock. */
 const DEMO_START_OFFLINE = true;
+/** Tempo do aviso de toque repetido (mesmo do "Desfazer" padrão). */
+const SUSPECT_HIGHLIGHT_MS = 5_000;
 
 /**
  * Tela de cronometragem para tablet (docs/arquitetura.md §4.3, PDF página 6).
@@ -40,6 +42,9 @@ export class TimingBoard {
   protected readonly isDev = isDevMode();
   protected readonly simulateOffline = this.connectivity.simulateOffline;
   protected readonly mode = signal<TapMode>('lap');
+  /** Piloto cuja última passagem ficou abaixo da volta mínima (cartão em âmbar enquanto o aviso dura). */
+  protected readonly suspectRegistrationId = signal<string | null>(null);
+  private suspectTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly heatTitle = computed(() => {
     const h = this.session.heat();
@@ -67,6 +72,7 @@ export class TimingBoard {
     body.classList.add('has-action-bar');
     // Ao sair da tela: a simulação é global (ConnectivityService é root) e a classe é do <body>.
     inject(DestroyRef).onDestroy(() => {
+      clearTimeout(this.suspectTimer);
       this.connectivity.simulateOffline.set(false);
       body.classList.remove('has-action-bar');
     });
@@ -75,7 +81,8 @@ export class TimingBoard {
   protected onCardTap(registrationId: string): void {
     const mode = this.mode();
     if (mode === 'lap') {
-      this.session.recordLap(registrationId);
+      const event = this.session.recordLap(registrationId);
+      this.checkRepeatedTap(registrationId, event);
       return;
     }
     const number = this.session.raceNumberOf(registrationId);
@@ -94,6 +101,7 @@ export class TimingBoard {
 
   protected undoLast(): void {
     this.mode.set('lap');
+    this.suspectRegistrationId.set(null);
     const undone = this.session.undoLast();
     if (undone) this.toasts.show(`Desfeito: ${this.describe(undone)}`, { tone: 'ok', durationMs: 3000 });
   }
@@ -101,6 +109,35 @@ export class TimingBoard {
   protected finishFlag(): void {
     this.mode.set('lap');
     this.notifyWithUndo('Bandeirada registrada', this.session.finishFlag());
+  }
+
+  /**
+   * Decisão (docs/decisions/0001): passagem abaixo da volta mínima NÃO é bloqueada nem descartada
+   * (nunca perder lançamento). A tela só avisa, com Desfazer, e marca o cartão. Quem invalida a
+   * volta oficialmente é o motor de regras.
+   */
+  private checkRepeatedTap(registrationId: string, event: TimingEvent): void {
+    clearTimeout(this.suspectTimer);
+    const lapMs = this.session.pilots().find((p) => p.entry.registrationId === registrationId)?.lastLapMs;
+    const minLapMs = this.session.heat().minLapMs;
+    if (lapMs === null || lapMs === undefined || lapMs >= minLapMs) {
+      this.suspectRegistrationId.set(null);
+      return;
+    }
+    const n = this.session.raceNumberOf(registrationId);
+    this.suspectRegistrationId.set(registrationId);
+    this.suspectTimer = setTimeout(() => this.suspectRegistrationId.set(null), SUSPECT_HIGHLIGHT_MS);
+    this.toasts.show(`Volta de ${msToDisplay(lapMs, 1)} no #${n}, abaixo da mínima (${msToDisplay(minLapMs)}). Toque repetido?`, {
+      tone: 'warn',
+      durationMs: SUSPECT_HIGHLIGHT_MS,
+      action: {
+        label: 'Desfazer',
+        run: () => {
+          this.session.undo(event.id);
+          this.suspectRegistrationId.set(null);
+        },
+      },
+    });
   }
 
   private notifyWithUndo(message: string, event: TimingEvent): void {

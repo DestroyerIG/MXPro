@@ -42,6 +42,8 @@ export class PilotCard {
   /** Última passagem registrada: cartão em laranja. */
   readonly highlighted = input(false);
   readonly mode = input<TapMode>('lap');
+  /** Última passagem abaixo da volta mínima: possível toque repetido (aviso, não bloqueio). */
+  readonly suspect = input(false);
   // output(): evento para o pai. Uso: (tapped)="onTap($event)". Leva o id da inscrição.
   readonly tapped = output<string>();
 
@@ -54,22 +56,27 @@ export class PilotCard {
     return ms === null ? '' : msToDisplay(ms, 1);
   });
   protected readonly penalty = computed(() => formatPenalty(this.pilot().penaltyMs));
-  protected readonly hint = computed(() => (this.pilot().disqualified ? 'DSQ' : TAP_HINT[this.mode()]));
+  protected readonly hint = computed(() =>
+    this.pilot().disqualified ? 'DSQ' : this.suspect() ? 'REPETIDO?' : TAP_HINT[this.mode()],
+  );
 
   protected readonly buttonClass = computed(() => {
     const base =
       'block w-full min-h-32 cursor-pointer touch-manipulation rounded-lg border-2 p-3 text-left select-none ' +
       'transition-transform active:scale-[0.97] ';
-    if (this.highlighted()) return base + 'border-brand-strong bg-brand-strong text-on-brand';
+    // Toque suspeito: contorno âmbar grosso por cima de qualquer outro estado.
+    const suspect = this.suspect() ? 'outline-solid outline-4 outline-offset-2 outline-warn ' : '';
+    if (this.highlighted()) return base + suspect + 'border-brand-strong bg-brand-strong text-on-brand';
     const armed =
       this.mode() === 'penalty' ? 'outline-dashed outline-3 outline-offset-2 outline-warn '
       : this.mode() === 'dsq' ? 'outline-dashed outline-3 outline-offset-2 outline-danger '
       : '';
     const border = this.pilot().disqualified ? 'border-danger' : 'border-line-strong';
-    return `${base}${armed}${border} bg-surface text-ink`;
+    return `${base}${suspect || armed}${border} bg-surface text-ink`;
   });
   protected readonly hintClass = computed(() =>
     this.pilot().disqualified ? 'rounded-full bg-danger px-2 text-on-state'
+    : this.suspect() ? 'rounded-full bg-warn px-2 text-on-warn'
     : this.highlighted() ? 'text-on-brand'
     : 'text-ink-2',
   );
@@ -80,7 +87,7 @@ export class PilotCard {
       this.mode() === 'penalty' ? 'Toque para aplicar penalidade'
       : this.mode() === 'dsq' ? 'Toque para desclassificar'
       : 'Toque para registrar passagem';
-    const status = p.disqualified ? ', desclassificado' : '';
+    const status = p.disqualified ? ', desclassificado' : this.suspect() ? ', possível toque repetido' : '';
     const last = this.lastLap() ? `, última volta ${this.lastLap()}` : '';
     return `Número ${p.entry.raceNumber}, ${p.entry.pilotName}, ${p.laps} voltas${last}${status}. ${action}.`;
   });

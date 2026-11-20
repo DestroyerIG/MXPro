@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type ToastTone = 'info' | 'ok' | 'danger';
+export type ToastTone = 'info' | 'ok' | 'warn' | 'danger';
 
 export interface ToastAction {
   /** Verbo da ação, ex.: "Desfazer". */
