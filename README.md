@@ -84,9 +84,10 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 
 ### Disponíveis (front-end com dados fictícios)
 
-- **Design system com identidade configurável:** todas as cores vêm de design tokens (CSS variables). A cor da marca
-  do contratante é aplicada em tempo de execução, e os tons derivados são calculados para garantir contraste
-  **WCAG AA**. Tem tema claro e escuro.
+- **Design system com identidade configurável:** todas as cores vêm de design tokens (CSS variables). Nome, logo e
+  cor do contratante vêm da API e são aplicados em tempo de execução; os tons derivados são calculados para garantir
+  contraste **WCAG AA**. A última marca fica guardada no aparelho, para as telas abrirem certas mesmo offline. Tem
+  tema claro e escuro.
 - **Painel do organizador:** menu lateral responsivo (vira gaveta no celular) e painel do evento com totais, próximas
   baterias com situação e gráfico de inscritos por categoria. Mostra estados de carregamento e de erro.
 - **Cronometragem para tablet:**
@@ -203,9 +204,14 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 | `POST /api/auth/logout` | Encerra a sessão (vale na hora) |
 | `GET /api/auth/me` | Usuário logado e validade da sessão |
 | `GET /api/users` | Equipe da organização — **somente organizador** |
+| `GET /api/settings/branding` | Marca do contratante (nome, destaque, cor, logo) — público |
+| `PUT /api/settings/branding` | Altera a marca — **somente organizador** |
 
 Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
 contra CSRF. Detalhes e motivos em [`docs/decisions/0002`](docs/decisions/0002-autenticacao-por-sessao-em-cookie.md).
+
+Em desenvolvimento o `ng serve` encaminha `/api` para a API (`apps/web/proxy.conf.json`): front e API ficam na
+mesma origem, como em produção.
 
 Todo erro da API segue o formato `{ code, message, details? }`, com mensagens em português.
 
@@ -264,7 +270,7 @@ pnpm exec ng build
 
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
-- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • marca via API • login no front • CI
+- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • login no front • CI
 - [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
