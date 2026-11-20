@@ -1,0 +1,21 @@
+{
+  "name": "@mxpro/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tipos e schemas Zod compartilhados entre API e front (sem dependência de framework)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.0"
+  }
+}
