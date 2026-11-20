@@ -133,7 +133,8 @@ Detalhes em [`docs/arquitetura.md`](docs/arquitetura.md).
 | Monorepo | **pnpm workspaces** |
 | Testes | **Vitest** + Angular TestBed (`RouterTestingHarness`, testes de componente e de funções puras) |
 | Offline (planejado) | `@angular/service-worker` + IndexedDB (Dexie) |
-| API (planejado) | Node.js + Fastify + Zod, PostgreSQL + Prisma, WebSocket |
+| Banco | **PostgreSQL 18** + **Prisma 7** (migrations versionadas, travas `CHECK` no banco), Docker Compose |
+| API (em construção) | Node.js + Fastify + Zod, sessão em cookie httpOnly, WebSocket |
 
 ## Começando
 
@@ -151,6 +152,21 @@ pnpm install
 pnpm dev            # abre o front em http://localhost:4200
 ```
 
+### Banco de dados (desenvolvimento)
+
+Requer **Docker** em execução. O Postgres sobe na porta **5433** (para não conflitar com uma instalação local).
+
+```bash
+cp .env.example .env   # ajuste se necessário; o .env nunca é versionado
+pnpm db:up             # sobe o PostgreSQL 18 (docker compose)
+pnpm db:migrate        # aplica as migrations
+pnpm db:seed           # dados fictícios: 1 usuário por perfil (senha = SEED_PASSWORD do .env)
+pnpm db:studio         # (opcional) navegador visual do banco
+```
+
+Usuários do seed: `organizador@mxpro.test`, `secretaria@mxpro.test`, `cronometrista@mxpro.test` e
+`piloto@mxpro.test`. O seed é idempotente e se recusa a rodar com `NODE_ENV=production`.
+
 ### Scripts
 
 | Comando (na raiz) | O que faz |
@@ -159,6 +175,9 @@ pnpm dev            # abre o front em http://localhost:4200
 | `pnpm build` | Build de produção de todos os pacotes |
 | `pnpm test` | Testes unitários de todos os pacotes |
 | `pnpm typecheck` | Checagem de tipos (`tsc --noEmit`) |
+| `pnpm db:up` / `db:down` | Sobe / derruba o PostgreSQL de desenvolvimento |
+| `pnpm db:migrate` | Cria/aplica migrations (Prisma) |
+| `pnpm db:seed` | Popula o banco com dados fictícios |
 
 No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watch=false`,
 `pnpm exec ng generate component features/<area>/<nome>`.
@@ -192,7 +211,9 @@ MXPro/
 │              ├─ timekeeping/  #   cronometragem (log de eventos + derivações puras)
 │              ├─ live/         #   resultado ao vivo / telão
 │              └─ design-system/#   catálogo de componentes
-├─ packages/                    # (próximas fases) rules-engine, shared, db, timing-adapters
+├─ packages/
+│  └─ db/                       # Prisma: schema, migrations, seed e cliente do banco
+│                               # (próximas fases: rules-engine, shared, timing-adapters)
 └─ docs/
    ├─ arquitetura.md            # escopo, princípios, arquitetura, convenções e roadmap
    ├─ design/                   # direção visual e prévia interativa
@@ -224,7 +245,7 @@ pnpm exec ng build
 
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
-- [ ] **Fundação:** CI, PostgreSQL + Prisma, autenticação e perfis de acesso (RBAC), seeds
+- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • API Fastify • autenticação e perfis de acesso (RBAC) • marca via API • CI
 - [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
