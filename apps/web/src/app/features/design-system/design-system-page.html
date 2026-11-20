@@ -1,0 +1,137 @@
+<div class="h-1.5 bg-brand"></div>
+<main class="mx-auto grid max-w-6xl gap-10 px-4 py-8 sm:px-6">
+  <header class="flex flex-wrap items-end justify-between gap-6 border-b-2 border-brand pb-4">
+    <div>
+      <h1 class="text-3xl font-bold">Componentes</h1>
+      <p class="text-ink-2">Catálogo do design system com dados fictícios do escopo.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-6">
+      <div>
+        <p class="mb-1 text-xs font-bold text-ink-2" id="theme-label">Tema</p>
+        <ui-tabs label="Tema" [tabs]="themeOptions" [selected]="themeChoice()" (selectedChange)="setTheme($event)" />
+      </div>
+      <div>
+        <p class="mb-1 text-xs font-bold text-ink-2">Marca do contratante (simulação)</p>
+        <div class="flex gap-2">
+          @for (b of brandSamples; track b.color) {
+            <button
+              type="button"
+              class="size-9 cursor-pointer rounded-full border-2"
+              [class.border-ink]="brandColor() === b.color"
+              [class.border-line]="brandColor() !== b.color"
+              [style.background]="b.color"
+              [attr.aria-label]="b.name"
+              [attr.aria-pressed]="brandColor() === b.color"
+              (click)="setBrand(b.color)"
+            ></button>
+          }
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="grid gap-3" aria-labelledby="s-buttons">
+    <h2 id="s-buttons" class="text-xl font-bold text-brand-text">Botões</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <button uiButton>Avançar</button>
+      <button uiButton variant="secondary">Voltar</button>
+      <button uiButton variant="danger">Desclassificar</button>
+      <button uiButton variant="dark">BANDEIRADA</button>
+      <button uiButton disabled>Indisponível</button>
+      <button uiButton size="sm" variant="secondary">Pequeno</button>
+      <button uiButton size="lg">Grande</button>
+    </div>
+    <p class="text-sm text-ink-2">Tamanho de pista (mínimo de 64px, para luva):</p>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <button uiButton size="track" variant="secondary">Penalidade</button>
+      <button uiButton size="track" variant="danger">Desclassificar</button>
+      <button uiButton size="track" variant="secondary">Desfazer última</button>
+      <button uiButton size="track" variant="dark">BANDEIRADA</button>
+    </div>
+  </section>
+
+  <section class="grid gap-3" aria-labelledby="s-forms">
+    <h2 id="s-forms" class="text-xl font-bold text-brand-text">Campos</h2>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <ui-form-field label="Nome completo" hint="Como no documento de identidade" required [error]="nameError()">
+        <input uiControl type="text" autocomplete="name" [value]="pilotName()" (input)="pilotName.set($any($event.target).value)" />
+      </ui-form-field>
+      <ui-form-field label="Categoria">
+        <select uiControl>
+          @for (c of categories; track c.id) {
+            <option [value]="c.id">{{ c.label }}</option>
+          }
+        </select>
+      </ui-form-field>
+      <ui-form-field label="Volta mínima válida" hint="Formato mm:ss.mmm">
+        <input uiControl type="text" inputmode="numeric" value="00:45.000" />
+      </ui-form-field>
+    </div>
+    <p class="text-sm text-ink-2">Digite 1 ou 2 letras no nome para ver o estado de erro.</p>
+  </section>
+
+  <section class="grid gap-3" aria-labelledby="s-badges">
+    <h2 id="s-badges" class="text-xl font-bold text-brand-text">Badges de status</h2>
+    <div class="flex flex-wrap gap-2">
+      @for (t of tones; track t.tone) {
+        <ui-status-badge [tone]="t.tone">{{ t.label }}</ui-status-badge>
+      }
+    </div>
+  </section>
+
+  <section class="grid gap-3" aria-labelledby="s-stats">
+    <h2 id="s-stats" class="text-xl font-bold text-brand-text">Stat tiles e card</h2>
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <ui-stat-tile label="Inscritos" [value]="128" tone="brand" />
+      <ui-stat-tile label="Pagos" [value]="112" tone="ok" />
+      <ui-stat-tile label="Pendentes" [value]="16" tone="warn" />
+      <ui-stat-tile label="Baterias" [value]="6" tone="info" />
+    </div>
+    <ui-card heading="Próximas baterias">
+      <ul class="divide-y divide-line">
+        <li class="flex items-center gap-4 py-2"><span class="w-12 font-bold text-brand-text">09:00</span><span class="flex-1 font-bold">MX1 - Bateria 1</span><ui-status-badge tone="ok">Pronta</ui-status-badge></li>
+        <li class="flex items-center gap-4 py-2"><span class="w-12 font-bold text-brand-text">10:20</span><span class="flex-1 font-bold">Feminino - Única</span><ui-status-badge tone="warn">Grid pendente</ui-status-badge></li>
+        <li class="flex items-center gap-4 py-2"><span class="w-12 font-bold text-brand-text">11:00</span><span class="flex-1 font-bold">Master 35+ - Bat. 1</span><ui-status-badge tone="idle">Aguardando</ui-status-badge></li>
+      </ul>
+    </ui-card>
+  </section>
+
+  <section class="grid gap-3" aria-labelledby="s-table">
+    <h2 id="s-table" class="text-xl font-bold text-brand-text">Tabela</h2>
+    <div class="overflow-x-auto rounded-lg border border-line bg-surface">
+      <table uiTable>
+        <thead>
+          <tr><th scope="col">Nº</th><th scope="col">Piloto</th><th scope="col">Categoria</th><th scope="col">Moto</th><th scope="col">Pagamento</th><th scope="col">Vistoria</th></tr>
+        </thead>
+        <tbody>
+          @for (r of registrations; track r.raceNumber) {
+            <tr>
+              <td class="font-bold text-brand-text">{{ r.raceNumber }}</td>
+              <td>{{ r.pilot }}</td>
+              <td>{{ r.category }}</td>
+              <td>{{ r.bike }}</td>
+              <td><ui-status-badge [tone]="r.payment === 'Pago' ? 'ok' : 'warn'">{{ r.payment }}</ui-status-badge></td>
+              <td><ui-status-badge [tone]="r.inspection === 'Aprovada' ? 'ok' : 'warn'">{{ r.inspection }}</ui-status-badge></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="grid gap-3" aria-labelledby="s-tabs">
+    <h2 id="s-tabs" class="text-xl font-bold text-brand-text">Abas</h2>
+    <ui-tabs #catTabs label="Categorias" [tabs]="categories" [(selected)]="category" />
+    <div role="tabpanel" [attr.aria-labelledby]="catTabs.tabId(category())" class="rounded-lg border border-line bg-surface p-4">
+      Mostrando resultados de <strong>{{ categoryLabel() }}</strong>. Use as setas do teclado para trocar de aba.
+    </div>
+  </section>
+
+  <section class="grid gap-3" aria-labelledby="s-toast">
+    <h2 id="s-toast" class="text-xl font-bold text-brand-text">Toast</h2>
+    <div class="flex flex-wrap gap-3">
+      <button uiButton variant="secondary" (click)="showUndoToast()">Mostrar toast com Desfazer</button>
+      <button uiButton variant="secondary" (click)="showErrorToast()">Mostrar toast de erro</button>
+    </div>
+  </section>
+</main>

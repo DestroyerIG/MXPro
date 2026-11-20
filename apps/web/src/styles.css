@@ -1,0 +1,119 @@
+@import 'tailwindcss';
+@import './styles/tokens.css';
+
+/*
+ * Liga os tokens ao Tailwind: `bg-brand`, `text-ink`, `border-line` etc. passam a existir.
+ * `--color-*: initial` APAGA a paleta padrão do Tailwind (bg-blue-500, text-gray-700…),
+ * então é impossível usar uma cor fora dos tokens sem o build reclamar de classe inexistente.
+ * `inline` faz o utilitário apontar para a variável (var(--…)), e não para o valor: assim a
+ * troca de tema e de marca em runtime funciona.
+ */
+@theme inline {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-brand: var(--brand-primary);
+  --color-brand-strong: var(--brand-primary-strong);
+  --color-brand-soft: var(--brand-primary-soft);
+  --color-on-brand: var(--brand-on-primary);
+  --color-brand-text: var(--brand-text);
+
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-text-2);
+  --color-muted: var(--c-text-muted);
+  --color-canvas: var(--c-bg);
+  --color-zebra: var(--c-zebra);
+  --color-surface: var(--c-surface);
+  --color-line: var(--c-border);
+  --color-line-strong: var(--c-border-strong);
+  --color-control: var(--c-control-border);
+  --color-chrome: var(--c-chrome);
+  --color-chrome-hover: var(--c-chrome-hover);
+  --color-chrome-edge: var(--c-chrome-edge);
+  --color-on-chrome: var(--c-on-chrome);
+  --color-on-chrome-muted: var(--c-on-chrome-muted);
+
+  --color-ok: var(--state-ok);
+  --color-ok-strong: var(--state-ok-strong);
+  --color-warn: var(--state-warn);
+  --color-idle: var(--state-idle);
+  --color-danger: var(--state-danger);
+  --color-danger-text: var(--state-danger-text);
+  --color-info: var(--state-info);
+  --color-info-strong: var(--state-info-strong);
+  --color-on-state: var(--on-state);
+  --color-on-warn: var(--on-warn);
+
+  --color-live-bg: var(--live-bg);
+  --color-live-surface: var(--live-surface);
+  --color-live-line: var(--live-line);
+  --color-live-leader: var(--live-leader);
+  --color-live-text: var(--live-text);
+  --color-live-muted: var(--live-muted);
+  --color-live-time: var(--live-time);
+
+  --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --shadow-float: var(--shadow-float);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Foco sempre visível (teclado), nunca removido. */
+  :focus-visible {
+    outline: 3px solid var(--brand-primary);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * Tabela: estilo global porque as <th>/<td> são escritas por quem usa a tabela; o CSS encapsulado
+ * de um componente não alcançaria elas. A diretiva `uiTable` só aplica a classe.
+ */
+@layer components {
+  .ui-table {
+    @apply w-full border-collapse text-sm;
+  }
+  .ui-table th {
+    @apply bg-chrome text-on-chrome px-3 py-2 text-left font-bold whitespace-nowrap;
+  }
+  .ui-table th:first-child { @apply rounded-tl-md; }
+  .ui-table th:last-child { @apply rounded-tr-md; }
+  .ui-table td {
+    @apply border-line border-b px-3 py-2;
+  }
+  .ui-table tbody tr:nth-child(even) td {
+    @apply bg-zebra;
+  }
+  .ui-table .num {
+    @apply text-right;
+  }
+}
+
+/* Tela com barra de ações fixa no rodapé (cronometragem): avisos sobem acima dela. */
+body.has-action-bar {
+  --toast-offset: 10.75rem; /* 2 linhas de botões de pista */
+}
+@media (width >= 48rem) {
+  body.has-action-bar {
+    --toast-offset: 6.25rem; /* 1 linha */
+  }
+}
+
+/* Telão: linha que ganhou posição pisca em laranja translúcido (resposta a uma mudança real). */
+@keyframes live-moved-up {
+  from { background-color: color-mix(in srgb, var(--brand-primary) 40%, transparent); }
+  to { background-color: transparent; }
+}
+.live-moved-up td {
+  animation: live-moved-up 1.5s ease-out;
+}

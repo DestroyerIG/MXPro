@@ -1,0 +1,105 @@
+/*
+ * Design tokens — fonte: docs/design/direcao-visual.md (rev. 2, baseada no PDF de escopo).
+ *
+ * Camadas:
+ *   1. marca (--brand-*): vem do contratante; o BrandingService pode sobrescrever em runtime.
+ *   2. neutros e estados: fixos do sistema, redefinidos no tema escuro.
+ *   3. "on-*": cor de texto SOBRE um preenchimento; não muda com o tema (âmbar sempre leva texto escuro).
+ *
+ * Regra: componentes usam só estes tokens (via utilitários Tailwind mapeados em styles.css). Hex em componente é bug.
+ */
+:root {
+  /* marca */
+  --brand-primary: #e8590c;        /* barras, faixas, bordas, números grandes */
+  --brand-primary-strong: #c84d0a; /* fundo com texto branco pequeno (4,6:1) */
+  /* fundo de item selecionado: derivado da marca e da superfície, então acompanha tema e contratante */
+  --brand-primary-soft: color-mix(in srgb, var(--brand-primary) 9%, var(--c-surface));
+  --brand-on-primary: #ffffff;
+  --brand-text-light: #c84d0a;     /* texto na cor da marca sobre superfície clara */
+  --brand-text-dark: #ff8a4c;      /* idem, sobre superfície escura */
+  --brand-text: var(--brand-text-light);
+
+  /* neutros */
+  --c-ink: #1b1e23;
+  --c-text-2: #5b6168;
+  --c-text-muted: #6b7179;
+  --c-bg: #f8f6f4;
+  --c-zebra: #f4f0eb;
+  --c-surface: #ffffff;
+  --c-border: #e6e4dd;
+  --c-border-strong: #d8d4ca;
+  --c-control-border: #8a8f96;     /* contorno de input/select: 3,3:1 (WCAG 1.4.11) */
+  --c-chrome: #1a1d23;             /* menu lateral, cabeçalho de tabela, toast */
+  --c-chrome-hover: #2a2f36;
+  --c-chrome-edge: #1a1d23;        /* contorno de elementos grafite; no escuro clareia para não sumir no fundo */
+  --c-on-chrome: #ffffff;
+  --c-on-chrome-muted: #c9ccd1;
+
+  /* estados */
+  --state-ok: #2f9e44;
+  --state-ok-strong: #28863a;
+  --state-warn: #f49e00;
+  --state-idle: #6b7179;
+  --state-danger: #e03131;
+  --state-danger-text: #e03131;
+  --state-info: #1c7ed6;
+  --state-info-strong: #1a76c9;
+  --on-state: #ffffff;
+  --on-warn: #1b1e23;
+
+  /* telão / ao vivo: SEMPRE escuro (PDF p. 7), não muda com o tema do usuário */
+  --live-bg: #0e0f13;
+  --live-surface: #1a1d23;
+  --live-line: #22262d;
+  --live-leader: #2a2118;          /* realce marrom-alaranjado da linha do líder */
+  --live-text: #ffffff;
+  --live-muted: #9aa0a8;           /* 6,9:1 sobre --live-bg */
+  --live-time: #74c0fc;            /* melhor volta: 9,8:1 */
+
+  /* elevação: só para o que flutua */
+  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.18);
+
+  color-scheme: light;
+}
+
+/* Tema escuro: mesmos nomes, valores novos. Três estados: sistema (sem atributo), claro e escuro explícitos. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --brand-primary-soft: color-mix(in srgb, var(--brand-primary) 18%, var(--c-surface));
+    --brand-text: var(--brand-text-dark);
+    --c-ink: #f1f3f5;
+    --c-text-2: #a9afb6;
+    --c-text-muted: #8a9099;
+    --c-bg: #14161a;
+    --c-zebra: #22262d;
+    --c-surface: #1a1d23;
+    --c-border: #2a2f36;
+    --c-border-strong: #3a4048;
+    --c-control-border: #767c84;
+    --c-chrome: #0e0f13;
+    --c-chrome-hover: #22262d;
+    --c-chrome-edge: #4a5058;
+    --state-danger-text: #ff6b6b;
+    --shadow-float: 0 8px 24px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --brand-primary-soft: color-mix(in srgb, var(--brand-primary) 18%, var(--c-surface));
+  --brand-text: var(--brand-text-dark);
+  --c-ink: #f1f3f5;
+  --c-text-2: #a9afb6;
+  --c-text-muted: #8a9099;
+  --c-bg: #14161a;
+  --c-zebra: #22262d;
+  --c-surface: #1a1d23;
+  --c-border: #2a2f36;
+  --c-border-strong: #3a4048;
+  --c-control-border: #767c84;
+  --c-chrome: #0e0f13;
+  --c-chrome-hover: #22262d;
+  --c-chrome-edge: #4a5058;
+  --state-danger-text: #ff6b6b;
+  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
+}
