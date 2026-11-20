@@ -1,0 +1,9 @@
+# Quebras de linha padronizadas em LF no repositório e na cópia de trabalho,
+# independentemente do sistema (Windows, macOS, Linux).
+* text=auto eol=lf
+
+# Binários: nunca converter
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
