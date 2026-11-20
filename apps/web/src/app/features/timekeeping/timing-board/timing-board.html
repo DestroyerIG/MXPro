@@ -1,0 +1,107 @@
+<div class="flex min-h-dvh flex-col bg-canvas">
+  <!-- Cabeçalho grafite (PDF): bateria, relógio, estado da prova e da conexão -->
+  <header class="grid gap-3 bg-chrome px-4 py-3 text-on-chrome sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
+    <div class="min-w-0">
+      <h1 class="text-xl font-bold">{{ heatTitle() }}</h1>
+      <p class="text-sm text-on-chrome-muted">Cronometrista: {{ session.heat().timekeeperName }}</p>
+    </div>
+
+    <div class="flex items-center gap-3" role="timer" aria-label="Relógio da bateria">
+      <div>
+        <p class="text-5xl leading-none font-bold text-brand md:text-6xl">{{ clock() }}</p>
+        <p class="text-sm text-on-chrome-muted">{{ clockHint() }}</p>
+      </div>
+      @if (session.finished()) {
+        <ui-status-badge tone="idle" size="lg">BANDEIRADA</ui-status-badge>
+      } @else {
+        <ui-status-badge tone="ok" size="lg">EM PROVA</ui-status-badge>
+      }
+    </div>
+
+    <!-- aria-live: leitor de tela anuncia quando cai/volta a conexão e quando a fila esvazia -->
+    <div class="flex flex-wrap gap-2 md:flex-col md:items-end" role="status" aria-live="polite">
+      @if (!outbox.online()) {
+        <ui-status-badge tone="warn" size="lg" class="md:min-w-56">
+          OFFLINE - {{ outbox.pendingCount() }} pendente{{ outbox.pendingCount() === 1 ? '' : 's' }}
+        </ui-status-badge>
+        <ui-status-badge tone="idle" size="lg" class="md:min-w-56">Sincroniza ao reconectar</ui-status-badge>
+      } @else if (outbox.pendingCount() > 0) {
+        <ui-status-badge tone="warn" size="lg" class="md:min-w-56">
+          SINCRONIZANDO - {{ outbox.pendingCount() }}
+        </ui-status-badge>
+      } @else {
+        <ui-status-badge tone="ok" size="lg" class="md:min-w-56">ONLINE - tudo enviado</ui-status-badge>
+      }
+    </div>
+  </header>
+
+  <!-- Aviso de ação armada (penalidade/DSQ): o próximo toque num cartão aplica a ação -->
+  @if (armedMessage()) {
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 font-bold sm:px-6"
+      [class]="mode() === 'dsq' ? 'bg-danger text-on-state' : 'bg-warn text-on-warn'"
+      role="status"
+    >
+      <span>{{ armedMessage() }}</span>
+      <button uiButton variant="secondary" size="lg" (click)="mode.set('lap')">Cancelar</button>
+    </div>
+  }
+
+  <main class="grid flex-1 content-start gap-4 p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <section aria-label="Pilotos da bateria" class="grid content-start gap-3 [grid-template-columns:repeat(auto-fill,minmax(10.5rem,1fr))]">
+      @for (pilot of session.pilots(); track pilot.entry.registrationId) {
+        <app-pilot-card
+          [pilot]="pilot"
+          [mode]="mode()"
+          [highlighted]="mode() === 'lap' && pilot.entry.registrationId === session.lastPassRegistrationId()"
+          (tapped)="onCardTap($event)"
+        />
+      }
+    </section>
+
+    <aside aria-labelledby="h-passes" class="self-start rounded-lg border border-line-strong bg-surface p-4">
+      <h2 id="h-passes" class="border-b-2 border-line pb-2 font-bold">Últimas passagens</h2>
+      @if (passes().length) {
+        <ol class="divide-y divide-line">
+          @for (p of passes(); track p.eventId) {
+            <li class="grid grid-cols-[3.5rem_2.5rem_minmax(0,1fr)] py-2 text-base">
+              <span class="font-bold text-brand-text">#{{ p.raceNumber }}</span>
+              <span class="text-ink-2">V{{ p.lap }}</span>
+              <span class="text-right font-bold">{{ p.time }}</span>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="pt-2 text-ink-2">Nenhuma passagem ainda. Toque no cartão do piloto quando ele cruzar a linha.</p>
+      }
+      @if (isDev) {
+        <!-- Ferramenta de desenvolvimento: não aparece no build de produção (isDevMode). -->
+        <label class="mt-4 flex cursor-pointer items-center gap-2 border-t border-line pt-3 text-sm text-ink-2">
+          <input type="checkbox" class="size-4" [checked]="simulateOffline()" (change)="simulateOffline.set($any($event.target).checked)" />
+          Simular queda de internet (dev)
+        </label>
+      }
+    </aside>
+  </main>
+
+  <!-- Ações. BANDEIRADA fica na ponta oposta, longe das outras, para evitar toque acidental. -->
+  <footer class="sticky bottom-0 grid grid-cols-2 gap-3 border-t border-line bg-canvas p-4 sm:px-6 md:grid-cols-4">
+    <button uiButton size="track" variant="secondary" [attr.aria-pressed]="mode() === 'penalty'"
+            [class.outline-3]="mode() === 'penalty'" [class.outline-warn]="mode() === 'penalty'"
+            (click)="toggleMode('penalty')">
+      Penalidade
+    </button>
+    <button uiButton size="track" variant="danger" [attr.aria-pressed]="mode() === 'dsq'"
+            [class.outline-3]="mode() === 'dsq'" [class.outline-danger]="mode() === 'dsq'"
+            (click)="toggleMode('dsq')">
+      Desclassificar
+    </button>
+    <button uiButton size="track" variant="secondary" [disabled]="!session.canUndo()" (click)="undoLast()">
+      Desfazer última
+    </button>
+    <button uiButton size="track" variant="dark" [disabled]="session.finished()" (click)="finishFlag()">
+      {{ session.finished() ? 'BANDEIRADA DADA' : 'BANDEIRADA' }}
+    </button>
+  </footer>
+
+</div>
