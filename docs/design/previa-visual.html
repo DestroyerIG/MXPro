@@ -1,0 +1,506 @@
+<title>Direção visual MXPro</title>
+<style>
+/* Layout: espécime fiel ao PDF de escopo — capa grafite com faixa laranja e bandeira quadriculada, depois painel, pista e telão/celular. */
+:root {
+  /* página da prévia (segue o tema do visitante) */
+  --pg-bg: #FFFFFF; --pg-fg: #1B1E23; --pg-muted: #5B6168; --pg-line: #D8D4CA;
+  /* marca (substituível pelo contratante) */
+  --brand-primary: #E8590C; --brand-primary-strong: #C84D0A; --brand-primary-soft: #FFF0E8; --brand-on-primary: #FFFFFF;
+  /* neutros */
+  --c-ink: #1B1E23; --c-chrome: #1A1D23; --c-chrome-hover: #2A2F36; --c-bg: #F8F6F4; --c-zebra: #F4F0EB; --c-surface: #FFFFFF;
+  --c-border: #E6E4DD; --c-border-strong: #D8D4CA; --c-text-2: #5B6168; --c-text-muted: #9AA0A8;
+  /* estados */
+  --state-ok: #2F9E44; --state-ok-strong: #28863A; --state-warn: #F49E00; --state-idle: #6B7179;
+  --state-danger: #E03131; --state-info: #1C7ED6;
+  /* ao vivo */
+  --live-bg: #0E0F13; --live-surface: #1A1D23; --live-leader: #2A2118; --live-text: #FFFFFF; --live-muted: #9AA0A8; --live-time: #74C0FC;
+  --f: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pg-bg: #14161A; --pg-fg: #F1F3F5; --pg-muted: #A9AFB6; --pg-line: #2A2F36; color-scheme: dark } }
+:root[data-theme="dark"] { --pg-bg: #14161A; --pg-fg: #F1F3F5; --pg-muted: #A9AFB6; --pg-line: #2A2F36; color-scheme: dark }
+
+*, *::before, *::after { box-sizing: border-box }
+body { background: var(--pg-bg); color: var(--pg-fg); font-family: var(--f); font-size: 15px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+h1, h2, h3, h4 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--brand-primary); outline-offset: 2px; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: 1120px; margin: 0 auto; }
+
+/* ---------- capa ---------- */
+.cover { background: var(--c-chrome); color: #fff; margin-top: calc(-1 * env(safe-area-inset-top, 0px)); }
+.cover::before { content: ""; display: block; height: calc(14px + env(safe-area-inset-top, 0px)); background: var(--brand-primary); }
+.cover .inner { padding-block: 48px 36px; display: grid; gap: 16px; }
+.cover .kicker { color: var(--brand-primary); font-weight: 700; font-size: 13px; letter-spacing: 0.04em; }
+.cover h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.08; font-weight: 700; }
+.cover p { color: #C9CCD1; max-width: 64ch; }
+.cover .controls { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-top: 8px; }
+.cover fieldset { border: 0; margin: 0; padding: 0; display: flex; gap: 8px; align-items: center; }
+.cover legend { float: left; margin-right: 8px; font-weight: 700; font-size: 14px; }
+.sw-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #2A2F36; background: var(--c); }
+.sw-btn[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px var(--c-chrome) inset; }
+.toggle { padding: 6px 14px; border-radius: 999px; border: 1px solid #5B6168; background: transparent; color: #fff; font-weight: 700; font-size: 13px; }
+.toggle[aria-pressed="true"] { background: var(--state-warn); color: var(--c-ink); border-color: var(--state-warn); }
+.checkers { height: 30px; background: conic-gradient(#fff 25%, transparent 0 50%, #fff 0 75%, transparent 0) 0 0 / 30px 30px; }
+
+/* ---------- seções da prévia (como no PDF) ---------- */
+main.inner { display: grid; gap: 48px; padding-block: 40px 64px; }
+.sec { display: grid; gap: 14px; }
+.sec-h { display: flex; gap: 12px; align-items: baseline; border-bottom: 2px solid var(--brand-primary); padding-bottom: 6px; }
+.sec-h b { color: var(--brand-primary); font-size: 26px; font-weight: 700; }
+.sec-h h2 { font-size: 26px; font-weight: 700; }
+.sec > p, .sec ul { color: var(--pg-muted); max-width: 78ch; }
+.sec ul { margin: 0; padding-left: 20px; }
+.caption { text-align: center; color: var(--pg-muted); font-size: 13px; }
+
+/* ---------- tokens ---------- */
+.tokens { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.tk { display: grid; gap: 6px; font-size: 12px; line-height: 1.35; }
+.tk i { height: 48px; border-radius: 8px; background: var(--c); box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.3); display: grid; place-items: center; font-style: normal; font-weight: 700; font-size: 13px; }
+.tk b { font-size: 13px; } .tk span { color: var(--pg-muted); }
+
+/* ---------- moldura de app ---------- */
+.frame { border: 1px solid var(--c-border-strong); border-radius: 10px; overflow: hidden; color-scheme: light; color: var(--c-ink); }
+
+/* ---------- PAINEL ---------- */
+.app { display: grid; grid-template-columns: 200px minmax(0, 1fr); background: var(--c-bg); font-size: 14px; }
+.side { background: var(--c-chrome); color: #fff; padding: 18px 10px; display: grid; gap: 18px; align-content: start; }
+.logo { font-weight: 800; font-size: 22px; padding: 0 10px; letter-spacing: -0.01em; }
+.logo span { color: var(--brand-primary); }
+.nav { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.nav a { display: block; padding: 7px 12px; border-radius: 6px; color: #C9CCD1; text-decoration: none; font-size: 14px; }
+.nav a:hover { background: var(--c-chrome-hover); color: #fff; }
+.nav a[aria-current="page"] { background: var(--brand-primary-strong); color: var(--brand-on-primary); font-weight: 700; }
+.main { padding: 22px 20px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
+.ev-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: start; }
+.ev-head h3 { font-size: 22px; font-weight: 700; }
+.ev-head p { color: var(--c-text-2); font-size: 13px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; padding: 3px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; white-space: nowrap; }
+.pill-ok { background: var(--state-ok-strong); color: #fff; }
+.pill-warn { background: var(--state-warn); color: var(--c-ink); }
+.pill-idle { background: var(--state-idle); color: #fff; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.stat { background: var(--c-surface); border: 1px solid var(--c-border); border-left: 4px solid var(--c); border-radius: 8px; padding: 12px 14px; display: grid; gap: 2px; }
+.stat span { color: var(--c-text-2); font-size: 13px; }
+.stat b { font-size: 32px; font-weight: 700; line-height: 1.1; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 8px; padding: 14px; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.card h4 { font-size: 15px; font-weight: 700; }
+.heats { list-style: none; margin: 0; padding: 0; }
+.heats li { display: grid; grid-template-columns: 52px minmax(0, 1fr) 120px; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--c-border); }
+.heats .hr { color: var(--brand-primary-strong); font-weight: 700; }
+.heats .nm { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.heats .pill { width: 100%; }
+.bars { display: grid; gap: 12px; padding-top: 4px; }
+.bar { display: grid; grid-template-columns: 70px minmax(0, 1fr) 28px; gap: 8px; align-items: center; font-size: 13px; }
+.bar span:first-child { color: var(--c-text-2); }
+.bar .track { height: 14px; }
+.bar .fill { display: block; height: 100%; background: var(--brand-primary); border-radius: 4px; }
+.bar b { font-size: 13px; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  .nav { display: flex; overflow-x: auto; }
+  .nav a { white-space: nowrap; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols { grid-template-columns: 1fr; }
+}
+
+/* ---------- PISTA ---------- */
+.tablet { background: var(--c-chrome); padding: 12px; border-radius: 22px; }
+.tk-app { background: var(--c-bg); border-radius: 12px; overflow: hidden; position: relative; }
+.tk-head { background: var(--c-chrome); color: #fff; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 14px 20px; }
+.tk-head .who b { display: block; font-size: 20px; font-weight: 700; }
+.tk-head .who span { color: var(--c-text-muted); font-size: 13px; }
+.clock { display: flex; gap: 12px; align-items: start; }
+.clock div { display: grid; }
+.clock b { color: var(--brand-primary); font-size: 56px; font-weight: 700; line-height: 0.95; }
+.clock span { color: var(--c-text-muted); font-size: 13px; }
+.status { display: grid; gap: 6px; justify-items: end; }
+.status .pill { font-size: 13px; padding: 5px 16px; min-width: 210px; }
+.pill-sync { background: var(--state-idle); color: #fff; }
+.tk-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; padding: 16px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; align-content: start; }
+.pc { position: relative; display: grid; gap: 2px; justify-items: start; text-align: left; min-height: 124px; padding: 12px 14px; background: var(--c-surface); color: var(--c-ink);
+  border: 1px solid var(--c-border-strong); border-radius: 10px; touch-action: manipulation; }
+.pc .num { font-size: 40px; font-weight: 700; line-height: 1; }
+.pc .tap { position: absolute; top: 12px; right: 14px; font-size: 11px; font-weight: 700; color: var(--c-text-2); }
+.pc .nm { color: var(--c-text-2); font-size: 14px; }
+.pc .lt { font-weight: 700; font-size: 15px; }
+.pc.last { background: var(--brand-primary-strong); border-color: var(--brand-primary-strong); color: #fff; }
+.pc.last .nm, .pc.last .tap { color: #fff; }
+.pc:active { transform: scale(0.98); }
+.pc.dsq { border: 2px solid var(--state-danger); }
+.pc.dsq .num { text-decoration: line-through; text-decoration-thickness: 3px; }
+.pc.dsq .tap { color: #fff; background: var(--state-danger); padding: 2px 8px; border-radius: 999px; }
+.passes { background: var(--c-surface); border: 1px solid var(--c-border-strong); border-radius: 10px; padding: 14px 16px; align-self: start; }
+.passes h4 { font-size: 16px; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--c-border); }
+.passes ol { list-style: none; margin: 0; padding: 0; }
+.passes li { display: grid; grid-template-columns: 56px 40px minmax(0, 1fr); gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--c-border); font-size: 15px; }
+.passes li b:first-child { color: var(--brand-primary-strong); }
+.passes li span { color: var(--c-text-2); }
+.passes li .t { text-align: right; font-weight: 700; color: var(--c-ink); }
+.tk-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 0 16px 16px; }
+.act { min-height: 64px; border-radius: 8px; border: 1px solid var(--c-border-strong); background: var(--c-surface); color: var(--c-ink); font-weight: 700; font-size: 17px; }
+.act-danger { color: var(--state-danger); border: 2px solid var(--state-danger); }
+.act-danger.armed { background: var(--state-danger); color: #fff; }
+.act-flag { background: var(--c-chrome); color: #fff; border-color: var(--c-chrome); letter-spacing: 0.02em; }
+.toast { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; gap: 14px; align-items: center; padding: 10px 10px 10px 18px; border-radius: 10px; background: var(--c-chrome); color: #fff; box-shadow: 0 8px 24px rgb(0 0 0 / 0.25); max-width: calc(100% - 32px); }
+.toast button { min-height: 48px; padding: 0 16px; border-radius: 6px; border: 0; background: var(--brand-primary-strong); color: #fff; font-weight: 700; }
+@media (max-width: 860px) {
+  .tk-head { grid-template-columns: 1fr; }
+  .status { justify-items: start; }
+  .tk-body { grid-template-columns: 1fr; }
+  .tk-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- TELÃO + CELULAR ---------- */
+.live-row { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 32px; align-items: start; }
+.tv-shell { background: var(--c-chrome); padding: 10px; border-radius: 14px; }
+.tv { background: var(--live-bg); color: var(--live-text); border-radius: 8px; overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; aspect-ratio: 16 / 10; font-size: clamp(11px, 1.45vw, 17px); }
+.tv-h { background: var(--brand-primary); display: flex; justify-content: space-between; align-items: center; padding: 0.7em 1.1em; border-radius: 0 0 8px 8px; margin: 0 0.6em; }
+.tv-h b { font-size: 1.25em; font-weight: 700; }
+.tv table { width: calc(100% - 1.2em); margin: 0.6em 0.6em 0; border-collapse: collapse; }
+.tv th { text-align: left; color: var(--live-muted); font-size: 0.75em; font-weight: 700; padding: 0.6em 0.7em; }
+.tv td { padding: 0.55em 0.7em; font-size: 1em; }
+.tv td.pos { width: 2.6em; }
+.tv tr.top3 td.pos { color: var(--brand-primary); font-weight: 700; }
+.tv tr.leader td { background: var(--live-leader); }
+.tv td.nm { font-weight: 700; }
+.tv td.best { color: var(--live-time); }
+.tv tr.moved td { animation: rise 1.2s ease-out; }
+@keyframes rise { 0% { background: rgb(232 89 12 / 0.35); } 100% { background: transparent; } }
+.tv-sp { text-align: center; color: var(--live-muted); font-size: 0.75em; padding: 0.9em; border-top: 1px solid #22262D; }
+.phone { background: var(--c-chrome); padding: 10px; border-radius: 26px; }
+.ph { background: #F4F2EF; border-radius: 18px; overflow: hidden; min-height: 420px; color: var(--c-ink); }
+.ph-h { background: var(--brand-primary-strong); color: #fff; text-align: center; font-weight: 700; padding: 18px 12px 14px; }
+.ph-tabs { display: flex; gap: 6px; justify-content: center; padding: 10px; }
+.ph-tabs button { min-height: 32px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--c-border-strong); background: #fff; color: var(--c-ink); font-weight: 700; font-size: 12px; }
+.ph-tabs button[aria-selected="true"] { background: var(--brand-primary-strong); border-color: var(--brand-primary-strong); color: #fff; }
+.ph-list { list-style: none; margin: 0; padding: 0 10px 12px; display: grid; gap: 8px; }
+.ph-list li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; background: #fff; border: 1px solid var(--c-border); border-radius: 10px; padding: 10px 12px; }
+.ph-list .ps { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--c-zebra); font-weight: 700; font-size: 13px; }
+.ph-list li:first-child .ps { background: var(--brand-primary-strong); color: #fff; }
+.ph-list b { font-size: 13px; display: block; }
+.ph-list small { color: var(--c-text-2); font-size: 12px; }
+@media (max-width: 860px) { .live-row { grid-template-columns: 1fr; } .phone { max-width: 300px; justify-self: center; width: 100%; } }
+.tv-scroll { overflow-x: auto; }
+.tv-scroll .tv-shell { min-width: 560px; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<header class="cover gutter">
+  <div class="inner">
+    <span class="kicker">DIREÇÃO VISUAL · REVISÃO 2</span>
+    <h1>Plataforma de Gestão<br>de Provas Off-Road</h1>
+    <p>Prévia seguindo o layout do escopo ilustrado (PDF). As cores, a fonte e a estrutura das telas são as do PDF. Só ajustei tons onde o texto não atingia o contraste mínimo de acessibilidade. Os dados são fictícios.</p>
+    <div class="controls">
+      <fieldset>
+        <legend>Cor da marca</legend>
+        <button class="sw-btn" style="--c:#E8590C" data-brand="#E8590C" aria-pressed="true" aria-label="Laranja do PDF (padrão)"></button>
+        <button class="sw-btn" style="--c:#1C7ED6" data-brand="#1C7ED6" aria-pressed="false" aria-label="Azul"></button>
+        <button class="sw-btn" style="--c:#C92A2A" data-brand="#C92A2A" aria-pressed="false" aria-label="Vermelho"></button>
+        <button class="sw-btn" style="--c:#2B8A3E" data-brand="#2B8A3E" aria-pressed="false" aria-label="Verde"></button>
+      </fieldset>
+      <button class="toggle" id="offline-toggle" aria-pressed="true">Pista offline</button>
+    </div>
+  </div>
+  <div class="checkers" aria-hidden="true"></div>
+</header>
+
+<main class="inner gutter">
+
+  <section class="sec" aria-labelledby="h-tk">
+    <div class="sec-h"><b>01</b><h2 id="h-tk">Cores e tokens</h2></div>
+    <p>Paleta extraída do PDF. Os tons "forte" só entram onde há texto pequeno sobre a cor, para passar no AA (4,5:1).</p>
+    <div class="tokens">
+      <div class="tk" style="--c:#E8590C"><i></i><b>Laranja da marca</b><span>#E8590C · barras, faixas, títulos</span></div>
+      <div class="tk" style="--c:#C84D0A"><i style="color:#fff">Aa</i><b>Laranja forte</b><span>#C84D0A · botão, menu ativo (4,6:1)</span></div>
+      <div class="tk" style="--c:#1A1D23"><i style="color:#fff">Aa</i><b>Grafite</b><span>#1A1D23 · menu, cabeçalhos</span></div>
+      <div class="tk" style="--c:#F4F0EB"><i></i><b>Areia</b><span>#F4F0EB · zebra, fundo</span></div>
+      <div class="tk" style="--c:#28863A"><i style="color:#fff">Pago</i><b>Ok</b><span>#2F9E44 / #28863A com texto</span></div>
+      <div class="tk" style="--c:#F49E00"><i style="color:#1B1E23">Pendente</i><b>Aviso</b><span>#F49E00 · texto grafite</span></div>
+      <div class="tk" style="--c:#6B7179"><i style="color:#fff">Aguardando</i><b>Inativo</b><span>#6B7179 (era #9AA0A8)</span></div>
+      <div class="tk" style="--c:#1C7ED6"><i></i><b>Info</b><span>#1C7ED6 · baterias, CH</span></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-panel">
+    <div class="sec-h"><b>02</b><h2 id="h-panel">Painel do evento</h2></div>
+    <ul>
+      <li>Visão em um só lugar: inscritos, pagos, pendentes e número de baterias.</li>
+      <li>Próximas baterias com horário e situação; gráfico de inscritos por categoria.</li>
+    </ul>
+    <div class="frame">
+      <div class="app">
+        <aside class="side">
+          <div class="logo"><span>MX</span>PRO</div>
+          <nav aria-label="Menu principal">
+            <ul class="nav">
+              <li><a href="#h-panel" aria-current="page">Painel</a></li>
+              <li><a href="#h-panel">Eventos</a></li>
+              <li><a href="#h-panel">Categorias</a></li>
+              <li><a href="#h-panel">Inscrições</a></li>
+              <li><a href="#h-track">Cronometragem</a></li>
+              <li><a href="#h-live">Resultados</a></li>
+              <li><a href="#h-panel">Campeonato</a></li>
+              <li><a href="#h-panel">Financeiro</a></li>
+              <li><a href="#h-panel">Equipe</a></li>
+            </ul>
+          </nav>
+        </aside>
+        <div class="main">
+          <div class="ev-head">
+            <div><h3>Copa Verão de Motocross - Etapa 2</h3><p>Sábado, 14/03 • Pista Terra Vermelha • Motocross + Cross Country</p></div>
+            <span class="pill pill-ok">INSCRIÇÕES ABERTAS</span>
+          </div>
+          <div class="stats">
+            <div class="stat" style="--c:var(--brand-primary)"><span>Inscritos</span><b>128</b></div>
+            <div class="stat" style="--c:var(--state-ok)"><span>Pagos</span><b>112</b></div>
+            <div class="stat" style="--c:var(--state-warn)"><span>Pendentes</span><b>16</b></div>
+            <div class="stat" style="--c:var(--state-info)"><span>Baterias</span><b>6</b></div>
+          </div>
+          <div class="cols">
+            <div class="card">
+              <h4>Próximas baterias</h4>
+              <ul class="heats">
+                <li><span class="hr">09:00</span><span class="nm">MX1 - Bateria 1</span><span class="pill pill-ok">Pronta</span></li>
+                <li><span class="hr">09:40</span><span class="nm">MX2 - Bateria 1</span><span class="pill pill-ok">Pronta</span></li>
+                <li><span class="hr">10:20</span><span class="nm">Feminino - Única</span><span class="pill pill-warn">Grid pendente</span></li>
+                <li><span class="hr">11:00</span><span class="nm">Master 35+ - Bat. 1</span><span class="pill pill-idle">Aguardando</span></li>
+                <li><span class="hr">11:40</span><span class="nm">65cc - Bateria 1</span><span class="pill pill-idle">Aguardando</span></li>
+                <li><span class="hr">13:00</span><span class="nm">MX1 - Bateria 2</span><span class="pill pill-idle">Aguardando</span></li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>Inscritos por categoria</h4>
+              <div class="bars">
+                <div class="bar"><span>MX1</span><span class="track"><span class="fill" style="width:77%"></span></span><b>24</b></div>
+                <div class="bar"><span>MX2</span><span class="track"><span class="fill" style="width:100%"></span></span><b>31</b></div>
+                <div class="bar"><span>65cc</span><span class="track"><span class="fill" style="width:55%"></span></span><b>17</b></div>
+                <div class="bar"><span>Feminino</span><span class="track"><span class="fill" style="width:29%"></span></span><b>9</b></div>
+                <div class="bar"><span>Master 35+</span><span class="track"><span class="fill" style="width:61%"></span></span><b>19</b></div>
+                <div class="bar"><span>Cross C.</span><span class="track"><span class="fill" style="width:90%"></span></span><b>28</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Protótipo ilustrativo - dados fictícios</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-track">
+    <div class="sec-h"><b>03</b><h2 id="h-track">Cronometragem (tablet)</h2></div>
+    <ul>
+      <li>Toque num cartão para registrar a volta. O último tocado fica laranja, como no PDF.</li>
+      <li>Desfazer, Desclassificar (arme e toque no piloto) e o aviso de offline funcionam nesta prévia.</li>
+      <li>Mesmo visual do PDF, com alvos de toque maiores para uso com luva.</li>
+    </ul>
+    <div class="tablet">
+      <div class="tk-app">
+        <div class="tk-head">
+          <div class="who"><b>BATERIA 1 • MX2</b><span>Cronometrista: Ana Souza</span></div>
+          <div class="clock"><div><b>08:42</b><span>restantes + 2 voltas</span></div><span class="pill pill-ok">EM PROVA</span></div>
+          <div class="status" role="status" aria-live="polite">
+            <span class="pill pill-warn" id="net-pill">OFFLINE - 14 pendentes</span>
+            <span class="pill pill-sync" id="sync-pill">Sincroniza ao reconectar</span>
+          </div>
+        </div>
+        <div class="tk-body">
+          <div class="cards" id="cards"></div>
+          <aside class="passes" aria-labelledby="h-passes">
+            <h4 id="h-passes">Últimas passagens</h4>
+            <ol id="passes"></ol>
+          </aside>
+        </div>
+        <div class="tk-actions">
+          <button class="act">Penalidade</button>
+          <button class="act act-danger" id="dsq-btn">Desclassificar</button>
+          <button class="act" id="undo">Desfazer última</button>
+          <button class="act act-flag">BANDEIRADA</button>
+        </div>
+        <div class="toast" id="toast" hidden role="status" aria-live="polite"><span id="toast-text"></span><button id="toast-undo">Desfazer</button></div>
+      </div>
+    </div>
+    <p class="caption">Protótipo ilustrativo - dados fictícios</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-live">
+    <div class="sec-h"><b>04</b><h2 id="h-live">Resultados ao vivo: telão e celular</h2></div>
+    <ul>
+      <li>A classificação muda quando você registra voltas na cronometragem acima.</li>
+      <li>Telão com espaço para patrocinadores; página pública leve no celular, com abas por categoria.</li>
+    </ul>
+    <div class="live-row">
+      <div class="tv-scroll">
+        <div class="tv-shell">
+          <div class="tv">
+            <div class="tv-h"><b>AO VIVO • MX2 - Bateria 1</b><b>Volta <span id="tv-lap">7</span>/10</b></div>
+            <table>
+              <thead><tr><th>POS</th><th>Nº</th><th>PILOTO</th><th>VOLTAS</th><th>MELHOR</th><th>DIF.</th></tr></thead>
+              <tbody id="tv-body"></tbody>
+            </table>
+            <div class="tv-sp">Patrocinadores: espaço para logos do evento</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="ph">
+          <div class="ph-h">Resultados ao vivo</div>
+          <div class="ph-tabs" role="tablist" aria-label="Categorias">
+            <button role="tab" aria-selected="false">MX1</button>
+            <button role="tab" aria-selected="true">MX2</button>
+            <button role="tab" aria-selected="false">Fem.</button>
+          </div>
+          <ol class="ph-list" id="ph-list"></ol>
+        </div>
+      </div>
+    </div>
+    <p class="caption">Protótipo ilustrativo - dados fictícios</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  // ---- cor da marca: troca e escolhe o tom com contraste AA para texto branco ----
+  function lum(h) { var c = [1, 3, 5].map(function (i) { var v = parseInt(h.slice(i, i + 2), 16) / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+  function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function strong(h) { var r = [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); for (var k = 1; k > 0.3; k -= 0.01) { var c = '#' + r.map(function (v) { return Math.round(v * k).toString(16).padStart(2, '0'); }).join(''); if (ratio(c, '#FFFFFF') >= 4.6) return c; } return h; }
+  function soft(h) { var r = [1, 3, 5].map(function (i) { return parseInt(h.slice(i, i + 2), 16); }); return '#' + r.map(function (v) { return Math.round(v + (255 - v) * 0.92).toString(16).padStart(2, '0'); }).join(''); }
+  var root = document.documentElement;
+  document.querySelectorAll('[data-brand]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var h = b.dataset.brand;
+      root.style.setProperty('--brand-primary', h);
+      root.style.setProperty('--brand-primary-strong', strong(h));
+      root.style.setProperty('--brand-primary-soft', soft(h));
+      document.querySelectorAll('[data-brand]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    });
+  });
+
+  // ---- dados fictícios (mesmos pilotos do PDF) ----
+  var pilots = [
+    { n: '27', nm: 'Rafael Menezes', laps: 7, last: 72400, best: 72431 },
+    { n: '14', nm: 'Bruno Tavares', laps: 7, last: 73100, best: 72950 },
+    { n: '88', nm: 'Lucas Andrade', laps: 6, last: 74000, best: 74011 },
+    { n: '05', nm: 'Gabriela Nunes', laps: 7, last: 75200, best: 74100 },
+    { n: '63', nm: 'Thiago Moura', laps: 6, last: 75900, best: 75200 },
+    { n: '31', nm: 'Diego Fontes', laps: 6, last: 77300, best: 76020 },
+    { n: '72', nm: 'Marcos Veloso', laps: 7, last: 73800, best: 73404 },
+    { n: '19', nm: 'Henrique Leal', laps: 6, last: 74600, best: 74600 }
+  ];
+  var passes = [
+    { n: '14', lap: 7, t: 73112 }, { n: '27', lap: 7, t: 72431 }, { n: '72', lap: 7, t: 73804 },
+    { n: '05', lap: 7, t: 75230 }, { n: '88', lap: 6, t: 74011 }, { n: '63', lap: 6, t: 75902 }
+  ];
+  var lastTapped = '14', offline = true, pending = 14, history = [], armed = false;
+
+  function fmt(ms) { var m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000), r = ms % 1000; return m + ':' + String(s).padStart(2, '0') + '.' + String(r).padStart(3, '0'); }
+  function short(nm) { var p = nm.split(' '); return p[0][0] + '. ' + p[p.length - 1]; }
+  function find(n) { return pilots.find(function (p) { return p.n === n; }); }
+
+  var cardsEl = document.getElementById('cards');
+  function renderCards() {
+    cardsEl.innerHTML = '';
+    pilots.forEach(function (p) {
+      var b = document.createElement('button');
+      b.className = 'pc' + (p.n === lastTapped && !p.dsq ? ' last' : '') + (p.dsq ? ' dsq' : '');
+      b.dataset.n = p.n;
+      b.setAttribute('aria-label', (p.dsq ? 'Desclassificado: ' : 'Registrar volta do número ') + p.n + ', ' + p.nm + ', ' + p.laps + ' voltas');
+      b.innerHTML = '<span class="num">' + p.n + '</span><span class="tap">' + (p.dsq ? 'DSQ' : 'TOQUE') + '</span><span class="nm">' + short(p.nm) + '</span><span class="lt">V' + p.laps + ' • ' + fmt(p.last).slice(0, -2) + '</span>';
+      cardsEl.appendChild(b);
+    });
+  }
+  function renderPasses() {
+    document.getElementById('passes').innerHTML = passes.slice(0, 7).map(function (x) {
+      return '<li><b>#' + x.n + '</b><span>V' + x.lap + '</span><b class="t">' + fmt(x.t) + '</b></li>';
+    }).join('');
+  }
+  function renderNet() {
+    var np = document.getElementById('net-pill'), sp = document.getElementById('sync-pill');
+    if (offline) { np.className = 'pill pill-warn'; np.textContent = 'OFFLINE - ' + pending + ' pendente' + (pending === 1 ? '' : 's'); sp.hidden = false; }
+  }
+  function standings() {
+    return pilots.filter(function (p) { return !p.dsq; }).slice().sort(function (a, b) { return b.laps - a.laps || a.best - b.best; });
+  }
+  function gapOf(p, lead) {
+    if (p === lead) return '-';
+    if (p.laps < lead.laps) { var d = lead.laps - p.laps; return '+' + d + ' volta' + (d > 1 ? 's' : ''); }
+    return '+' + ((p.best - lead.best) / 1000).toFixed(1);
+  }
+  function renderLive(moved) {
+    var o = standings(), lead = o[0];
+    document.getElementById('tv-body').innerHTML = o.map(function (p, i) {
+      var cls = (i === 0 ? 'leader ' : '') + (i < 3 ? 'top3 ' : '') + (p.n === moved ? 'moved' : '');
+      return '<tr class="' + cls + '"><td class="pos">' + (i + 1) + '</td><td>' + p.n + '</td><td class="nm">' + p.nm + '</td><td>' + p.laps + '</td><td class="best">' + fmt(p.best) + '</td><td>' + gapOf(p, lead) + '</td></tr>';
+    }).join('');
+    document.getElementById('tv-lap').textContent = Math.min(lead.laps, 10);
+    document.getElementById('ph-list').innerHTML = o.slice(0, 4).map(function (p, i) {
+      var sub = i === 0 ? p.laps + ' voltas • melhor ' + fmt(p.best).slice(0, -2) : gapOf(p, lead) + (p.laps === lead.laps ? ' s' : '');
+      return '<li><span class="ps">' + (i + 1) + '</span><span><b>#' + p.n + '  ' + short(p.nm) + '</b><small>' + sub + '</small></span></li>';
+    }).join('');
+  }
+
+  var toast = document.getElementById('toast'), toastTimer;
+  function showToast(t) { document.getElementById('toast-text').textContent = t; toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.hidden = true; }, 5000); }
+  function renderAll(moved) { renderCards(); renderPasses(); renderNet(); renderLive(moved); }
+
+  cardsEl.addEventListener('click', function (e) {
+    var c = e.target.closest('.pc'); if (!c) return;
+    var p = find(c.dataset.n); if (p.dsq) return;
+    if (armed) {
+      p.dsq = true; armed = false; history.push({ type: 'dsq', n: p.n, prevLast: lastTapped });
+      if (offline) pending += 1;
+      var btn = document.getElementById('dsq-btn'); btn.classList.remove('armed'); btn.textContent = 'Desclassificar';
+      renderAll(); showToast('Nº ' + p.n + ' desclassificado');
+      return;
+    }
+    var t = p.best + Math.round(Math.random() * 2600 - 500);
+    history.push({ type: 'lap', n: p.n, prevLast: lastTapped, prevBest: p.best, prevLastTime: p.last });
+    p.laps += 1; p.last = t; if (t < p.best) p.best = t;
+    passes.unshift({ n: p.n, lap: p.laps, t: t });
+    lastTapped = p.n; if (offline) pending += 1;
+    renderAll(p.n);
+    var card = cardsEl.querySelector('[data-n="' + p.n + '"]'); if (card) card.focus({ preventScroll: true });
+    showToast('Volta registrada: #' + p.n + ', volta ' + p.laps);
+  });
+
+  function undo() {
+    var h = history.pop(); if (!h) return;
+    var p = find(h.n);
+    if (h.type === 'lap') {
+      var i = passes.findIndex(function (x) { return x.n === h.n; }); if (i > -1) passes.splice(i, 1);
+      p.laps -= 1; p.best = h.prevBest; p.last = h.prevLastTime; showToast('Volta desfeita: #' + p.n);
+    } else { p.dsq = false; showToast('Desclassificação desfeita: #' + p.n); }
+    lastTapped = h.prevLast; if (offline && pending > 0) pending -= 1;
+    renderAll();
+  }
+  document.getElementById('undo').addEventListener('click', undo);
+  document.getElementById('toast-undo').addEventListener('click', function () { toast.hidden = true; undo(); });
+
+  var dsqBtn = document.getElementById('dsq-btn');
+  dsqBtn.addEventListener('click', function () {
+    armed = !armed; dsqBtn.classList.toggle('armed', armed);
+    dsqBtn.textContent = armed ? 'Toque no piloto' : 'Desclassificar';
+  });
+
+  var tg = document.getElementById('offline-toggle');
+  tg.addEventListener('click', function () {
+    offline = !offline; tg.setAttribute('aria-pressed', String(offline)); tg.textContent = offline ? 'Pista offline' : 'Pista online';
+    var np = document.getElementById('net-pill'), sp = document.getElementById('sync-pill');
+    if (offline) { renderNet(); return; }
+    sp.hidden = true;
+    var iv = setInterval(function () {
+      if (offline) { clearInterval(iv); return; }
+      pending = Math.max(0, pending - 2);
+      np.textContent = pending ? 'SINCRONIZANDO - ' + pending : 'ONLINE';
+      np.className = pending ? 'pill pill-warn' : 'pill pill-ok';
+      if (!pending) clearInterval(iv);
+    }, 250);
+  });
+
+  renderAll();
+})();
+</script>
