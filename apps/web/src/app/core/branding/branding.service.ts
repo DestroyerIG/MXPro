@@ -1,35 +1,51 @@
+import { HttpClient } from '@angular/common/http';
 import { DOCUMENT, Injectable, inject, signal } from '@angular/core';
+import { type Branding, DEFAULT_BRANDING } from '@mxpro/shared';
+import { firstValueFrom, timeout } from 'rxjs';
 import { BrandPalette, deriveBrandPalette } from './color';
 
-/** Identidade do contratante. No futuro virá da API (`Settings`); por enquanto, valores padrão do PDF. */
-export interface Branding {
-  name: string;
-  /** Trecho inicial do nome destacado na cor da marca quando não há logo (ex.: "MX" em MXPRO). */
-  nameAccent?: string;
-  /** Cor principal em #RRGGBB. Os outros tons são derivados com contraste AA garantido. */
-  primaryColor: string;
-  /** URL do logo. Sem logo, a interface mostra o nome. */
-  logoUrl?: string;
-}
+export type { Branding };
 
-export const DEFAULT_BRANDING: Branding = { name: 'MXPRO', nameAccent: 'MX', primaryColor: '#E8590C' };
+const CACHE_KEY = 'mxpro.branding';
+/** Sem resposta nesse tempo, seguimos com a marca já aplicada (a tela não espera a rede). */
+export const BRANDING_TIMEOUT_MS = 4000;
+export const BRANDING_URL = '/api/settings/branding';
 
 /**
- * Aplica a marca do contratante escrevendo as variáveis CSS `--brand-*` no <html>.
+ * Identidade visual do contratante, vinda da API (`GET /api/settings/branding`).
  *
- * `providedIn: 'root'`: existe uma única instância para o app inteiro (singleton), criada só
- * quando alguém a injeta pela primeira vez. Por isso fica em `core/`.
+ * Ordem ao abrir o app:
+ *  1. aplica na hora a última marca conhecida (guardada no aparelho) ou a padrão;
+ *  2. busca a atual na API em segundo plano (`refresh`) e aplica se mudou.
+ * Assim a cronometragem e o telão abrem com a marca certa mesmo sem internet.
+ *
+ * Aplicar = escrever as variáveis CSS `--brand-*` no <html> (tons derivados com contraste AA).
  */
 @Injectable({ providedIn: 'root' })
 export class BrandingService {
-  // inject(): pede uma dependência ao Angular. Alternativa antiga: parâmetro no constructor.
-  // DOCUMENT em vez de `document` global: deixa o service testável e compatível com SSR.
   private readonly root = inject(DOCUMENT).documentElement;
+  private readonly http = inject(HttpClient);
 
   private readonly _branding = signal<Branding>(DEFAULT_BRANDING);
   /** Somente leitura para quem consome: só o service muda a marca. */
   readonly branding = this._branding.asReadonly();
 
+  constructor() {
+    const cached = readCache();
+    if (cached) this.tryApply(cached);
+  }
+
+  /** Busca a marca atual na API. Nunca lança erro: falhou = mantém a que está aplicada. */
+  async refresh(): Promise<void> {
+    try {
+      const branding = await firstValueFrom(this.http.get<Branding>(BRANDING_URL).pipe(timeout(BRANDING_TIMEOUT_MS)));
+      if (this.tryApply(branding)) writeCache(branding);
+    } catch {
+      // Offline ou API fora do ar: segue com a marca em cache/padrão.
+    }
+  }
+
+  /** Aplica uma marca (também usado pela simulação no catálogo /componentes). Lança se a cor for inválida. */
   apply(branding: Branding): BrandPalette {
     const palette = deriveBrandPalette(branding.primaryColor);
     const vars: Record<string, string> = {
@@ -42,5 +58,31 @@ export class BrandingService {
     for (const [name, value] of Object.entries(vars)) this.root.style.setProperty(name, value);
     this._branding.set(branding);
     return palette;
+  }
+
+  private tryApply(branding: Branding): boolean {
+    try {
+      this.apply(branding);
+      return true;
+    } catch {
+      return false; // dado inválido (ex.: cor fora do formato): ignora e mantém a atual
+    }
+  }
+}
+
+function readCache(): Branding | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? (JSON.parse(raw) as Branding) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(branding: Branding): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(branding));
+  } catch {
+    /* storage bloqueado: só não lembra para a próxima abertura */
   }
 }

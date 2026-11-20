@@ -10,7 +10,7 @@ import { BrandingService } from '../../core/branding/branding.service';
   selector: 'app-brand-logo',
   template: `
     @if (branding().logoUrl; as url) {
-      <img [src]="url" [alt]="branding().name" class="h-8 w-auto" />
+      <img [src]="url" [alt]="branding().brandName" class="h-8 w-auto" />
     } @else {
       <span class="text-2xl font-extrabold tracking-tight">
         <span class="text-brand">{{ accent() }}</span>{{ rest() }}
@@ -23,8 +23,8 @@ export class BrandLogo {
   protected readonly branding = inject(BrandingService).branding;
 
   protected readonly accent = computed(() => {
-    const { name, nameAccent } = this.branding();
-    return nameAccent && name.startsWith(nameAccent) ? nameAccent : '';
+    const { brandName, brandNameAccent } = this.branding();
+    return brandNameAccent && brandName.startsWith(brandNameAccent) ? brandNameAccent : '';
   });
-  protected readonly rest = computed(() => this.branding().name.slice(this.accent().length));
+  protected readonly rest = computed(() => this.branding().brandName.slice(this.accent().length));
 }
