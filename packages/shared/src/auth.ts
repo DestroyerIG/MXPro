@@ -1,20 +1,11 @@
 import { z } from 'zod';
+import { ROLES } from './roles.js';
 
 /**
- * Contratos de autenticação usados pela API (validação) e pelo front (formulário e tipos).
+ * Contratos de autenticação usados pela API (validação) e pelo front (tipos).
  * Um só lugar: se a regra mudar, os dois lados mudam juntos.
+ * O front importa daqui só TIPOS (`import type`), que somem no build: o Zod não vai para o bundle.
  */
-
-/** Perfis de acesso (docs/arquitetura.md §1). */
-export const ROLES = ['ORGANIZER', 'SECRETARY', 'TIMEKEEPER', 'PILOT'] as const;
-export type Role = (typeof ROLES)[number];
-
-export const ROLE_LABELS: Record<Role, string> = {
-  ORGANIZER: 'Organizador',
-  SECRETARY: 'Secretaria',
-  TIMEKEEPER: 'Cronometrista',
-  PILOT: 'Piloto',
-};
 
 export const loginRequestSchema = z.object({
   email: z

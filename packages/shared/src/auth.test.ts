@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { ROLES, ROLE_LABELS, loginRequestSchema } from './auth.js';
+import { loginRequestSchema } from './auth.js';
+import { ROLES, ROLE_LABELS } from './roles.js';
 
 describe('loginRequestSchema', () => {
   it('normaliza o e-mail (espaços e maiúsculas), igual ao que o banco guarda', () => {
