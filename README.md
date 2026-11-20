@@ -187,13 +187,19 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 
 ## Rotas disponíveis
 
-| Rota | Tela | Público-alvo |
+| Rota | Tela | Quem acessa |
 |---|---|---|
+| `/entrar` | Login (e-mail e senha) | Equipe e pilotos |
 | `/painel` | Painel do evento | Organizador / secretaria |
-| `/painel/<área>` | Eventos, Categorias, Inscrições, Cronometragem, Resultados, Campeonato, Financeiro, Equipe | Organizador |
-| `/cronometragem` | Tela de pista para tablet/celular | Cronometrista |
-| `/ao-vivo/telao` | Classificação ao vivo em modo telão | Público |
+| `/painel/<área>` | Eventos, Categorias, Inscrições, Cronometragem, Resultados, Campeonato, Financeiro, Equipe | Organizador / secretaria |
+| `/cronometragem` | Tela de pista para tablet/celular | Cronometrista / organizador |
+| `/ao-vivo/telao` | Classificação ao vivo em modo telão | Público (sem login) |
 | `/componentes` | Catálogo do design system | Desenvolvimento |
+
+A raiz (`/`) leva cada perfil para a sua área. Quem abre uma área sem estar logado vai para `/entrar` e volta
+para ela depois do login. Quem abre a área de outro perfil é levado para a sua. Esses guards de rota só melhoram
+a navegação: a permissão de verdade é checada pela API em toda rota. Depois do primeiro login confirmado no
+aparelho, a cronometragem abre mesmo sem internet.
 
 **API** (`http://localhost:3000`)
 
@@ -247,11 +253,12 @@ MXPro/
 
 ## Qualidade e testes
 
-- **93 testes unitários** cobrindo:
+- **142 testes unitários** no front cobrindo:
   - formatação de tempo (truncamento de milésimos, contagem regressiva, diferença para o líder);
   - fuso horário do evento;
   - derivações do log de cronometragem (voltas, desfazer, penalidade, DSQ, eventos fora de ordem);
   - contraste da cor de marca;
+  - sessão, login, guards de rota por perfil e sessão expirada (inclusive abertura offline);
   - rotas, estados de carregamento e erro, e interações das telas.
 - **Acessibilidade:** contraste AA medido em todos os pares de cor, foco sempre visível, navegação por teclado
   (abas com setas, "Pular para o conteúdo", Esc fecha menus), `aria-current`, `aria-live` para estados de conexão
@@ -270,7 +277,7 @@ pnpm exec ng build
 
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
-- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • login no front • CI
+- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • CI
 - [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
