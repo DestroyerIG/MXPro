@@ -11,6 +11,13 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:generate": "pnpm --filter @mxpro/db generate",
+    "db:migrate": "pnpm --filter @mxpro/db migrate",
+    "db:seed": "pnpm --filter @mxpro/db seed",
+    "db:studio": "pnpm --filter @mxpro/db studio",
+    "postinstall": "pnpm --filter @mxpro/db generate"
   }
 }

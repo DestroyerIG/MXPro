@@ -9,3 +9,6 @@ allowBuilds:
   esbuild: false
   lmdb: false
   msgpackr-extract: false
+  # Prisma: o script baixa o "schema engine" usado por `prisma migrate`. Pacotes oficiais.
+  '@prisma/engines': true
+  prisma: true

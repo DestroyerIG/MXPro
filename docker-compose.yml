@@ -1,0 +1,24 @@
+# Banco de desenvolvimento. Subir: `pnpm db:up` (ou `docker compose up -d --wait`).
+# Porta 5433 no host para não conflitar com um PostgreSQL instalado localmente na 5432.
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: mxpro-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mxpro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mxpro_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-mxpro}
+      TZ: UTC
+    ports:
+      - "5433:5432"
+    volumes:
+      - mxpro-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  mxpro-pgdata:

@@ -1,0 +1,78 @@
+// Schema do banco da MXPro (docs/arquitetura.md §5.2).
+// Fase de fundação: usuários e perfis, sessões de login e configurações da marca.
+// Convenções: tabelas e colunas em snake_case no banco (@@map/@map), camelCase no código;
+// datas em UTC (timestamptz); ids UUID.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Perfis de acesso (docs/arquitetura.md §1). A autorização é checada no backend em toda rota.
+enum Role {
+  ORGANIZER
+  SECRETARY
+  TIMEKEEPER
+  PILOT
+}
+
+/// Como o nome do piloto aparece em páginas públicas e no telão (LGPD, §5.7).
+enum PublicNameDisplay {
+  FULL_NAME
+  INITIALS
+}
+
+model User {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  /// Sempre gravado em minúsculas (normalizado pela API).
+  email        String    @unique
+  name         String
+  /// Hash argon2id. A senha em texto nunca é armazenada.
+  passwordHash String    @map("password_hash")
+  role         Role
+  /// Usuário desativado não consegue logar e perde as sessões abertas.
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions     Session[]
+
+  @@map("users")
+}
+
+/// Sessão de login (cookie httpOnly). Guardamos só o HASH do token: quem ler o banco não consegue
+/// se passar pelo usuário. Logout ou bloqueio = apagar a linha, com efeito imediato.
+model Session {
+  /// SHA-256 (hex) do token enviado no cookie.
+  id         String   @id
+  userId     String   @map("user_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  userAgent  String?  @map("user_agent")
+  ip         String?
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// Configurações do contratante (sistema single-tenant: existe UMA linha, id = 1).
+/// Identidade visual aplicada em telas públicas, telão e PDFs (§2.7).
+model Settings {
+  id                Int               @id @default(1)
+  brandName         String            @map("brand_name")
+  /// Trecho inicial do nome destacado na cor da marca quando não há logo (ex.: "MX").
+  brandNameAccent   String?           @map("brand_name_accent")
+  /// Cor principal em #RRGGBB. O front deriva os demais tons com contraste AA.
+  primaryColor      String            @map("primary_color")
+  logoUrl           String?           @map("logo_url")
+  publicNameDisplay PublicNameDisplay @default(FULL_NAME) @map("public_name_display")
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("settings")
+}
