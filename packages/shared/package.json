@@ -4,6 +4,7 @@
   "private": true,
   "description": "Tipos e schemas Zod compartilhados entre API e front (sem dependência de framework)",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
