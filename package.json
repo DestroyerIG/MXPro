@@ -7,7 +7,7 @@
     "node": ">=22.20"
   },
   "scripts": {
-    "dev": "pnpm --filter web start",
+    "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
@@ -18,6 +18,8 @@
     "db:migrate": "pnpm --filter @mxpro/db migrate",
     "db:seed": "pnpm --filter @mxpro/db seed",
     "db:studio": "pnpm --filter @mxpro/db studio",
-    "postinstall": "pnpm --filter @mxpro/db generate"
+    "postinstall": "pnpm --filter @mxpro/db generate",
+    "dev:api": "pnpm --filter @mxpro/api dev",
+    "dev:web": "pnpm --filter web dev"
   }
 }

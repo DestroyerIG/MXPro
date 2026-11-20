@@ -1,0 +1,58 @@
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import type { PrismaClient } from '@mxpro/db';
+import Fastify, { type FastifyInstance } from 'fastify';
+import type { AppConfig } from './config.ts';
+import { registerErrorHandling } from './errors.ts';
+import { healthRoutes } from './routes/health.ts';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** Cliente do banco, disponível em todas as rotas como `app.db`. */
+    db: PrismaClient;
+  }
+}
+
+export interface AppDeps {
+  config: AppConfig;
+  /** Injetado (e não criado aqui) para os testes poderem usar um banco falso. */
+  db: PrismaClient;
+}
+
+/**
+ * Monta a aplicação SEM abrir porta: o server.ts chama listen(); os testes usam app.inject().
+ * Rotas finas: validam entrada e chamam services (docs/arquitetura.md §6).
+ */
+export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance> {
+  const app = Fastify({
+    logger:
+      config.nodeEnv === 'test'
+        ? false
+        : {
+            level: config.logLevel,
+            // Nunca registrar cookie/senha/token nos logs.
+            redact: ['req.headers.cookie', 'req.headers.authorization', 'res.headers["set-cookie"]'],
+            ...(config.nodeEnv === 'development' ? { transport: { target: 'pino-pretty' } } : {}),
+          },
+    // Atrás de proxy reverso (HTTPS) o IP real vem do cabeçalho; necessário para limitar tentativas por IP.
+    trustProxy: config.nodeEnv === 'production',
+  });
+
+  app.decorate('db', db);
+  registerErrorHandling(app);
+
+  await app.register(helmet);
+  await app.register(cors, {
+    origin: config.corsOrigins,
+    credentials: true, // o login usará cookie httpOnly
+  });
+
+  await app.register(
+    async (api) => {
+      await api.register(healthRoutes);
+    },
+    { prefix: '/api' },
+  );
+
+  return app;
+}
