@@ -159,6 +159,7 @@ Permissões são checadas **no backend** em toda rota; esconder botão no front 
 - Pré-carregar para offline: lista de pilotos da bateria, config da prova, assets do app (precache). A tela de cronometragem **precisa abrir e operar com internet zerada**.
 - Dois cronometristas na mesma bateria: eventos de dispositivos diferentes são mesclados; duplicata provável (mesmo piloto em janela de tempo muito curta) é **sinalizada**, não apagada automaticamente.
 - "Desfazer última" gera evento `UNDO` referenciando o anterior (não deleta).
+- Motivo automático nas correções feitas na pista; motivo por escrito nas correções posteriores. Passagem abaixo da volta mínima é registrada e **sinalizada** ("Toque repetido?"), nunca descartada. Ver [ADR 0001](decisions/0001-correcoes-na-pista-e-toque-repetido.md).
 
 ### 5.4 Tempo real
 - Ao aceitar eventos, o servidor recalcula a classificação da bateria (via motor de regras) e emite via WebSocket por sala `heat:{id}` / `event:{id}`.
