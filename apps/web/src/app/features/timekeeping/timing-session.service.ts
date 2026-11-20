@@ -1,5 +1,5 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
-import { SessionService } from '../../core/session/session.service';
+import { SessionService } from '../../core/auth/session.service';
 import { HeatInfo, TimingEvent, TimingEventType } from './timing.model';
 import { MOCK_DEVICE_ID, MOCK_ENTRIES, buildSeedEvents, createMockHeat } from './timing.mock';
 import { isFinished, lastUndoable, recentPasses, summarizePilots } from './timing-log';

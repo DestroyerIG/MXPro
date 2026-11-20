@@ -1,0 +1,55 @@
+<!--
+  Fundo grafite (o mesmo do menu lateral do PDF) com o cartão branco no centro.
+  A marca vem do BrandingService: o contratante vê o próprio logo e a própria cor já no login.
+-->
+<main class="grid min-h-dvh place-items-center bg-chrome px-4 py-10">
+  <div class="w-full max-w-sm">
+    <div class="mb-6 flex justify-center text-on-chrome">
+      <app-brand-logo />
+    </div>
+
+    <section class="rounded-lg border border-line bg-surface p-6 text-ink" aria-labelledby="login-title">
+      <h1 id="login-title" class="text-xl font-bold">Entrar</h1>
+      <p class="mt-1 mb-5 text-sm text-ink-2">Use o e-mail e a senha que o organizador cadastrou para você.</p>
+
+      <!-- novalidate: as mensagens são as nossas (em português, no lugar certo), não os balões do navegador. -->
+      <form novalidate class="grid gap-4" (submit)="onSubmit($event)">
+        <ui-form-field label="E-mail" required [error]="fieldError('email')">
+          <input uiControl type="email" autocomplete="username" inputmode="email" [formField]="loginForm.email" />
+        </ui-form-field>
+
+        <ui-form-field label="Senha" required [error]="fieldError('password')">
+          <div class="flex gap-2">
+            <input
+              uiControl
+              [type]="showPassword() ? 'text' : 'password'"
+              autocomplete="current-password"
+              [formField]="loginForm.password"
+            />
+            <button
+              uiButton
+              type="button"
+              variant="secondary"
+              class="shrink-0"
+              [attr.aria-pressed]="showPassword()"
+              (click)="showPassword.set(!showPassword())"
+            >
+              {{ showPassword() ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
+        </ui-form-field>
+
+        <!-- role="alert": o leitor de tela anuncia o erro assim que ele aparece. -->
+        @if (serverError(); as message) {
+          <p role="alert" class="rounded-md border-2 border-danger px-3 py-2 text-sm font-bold text-danger-text">
+            {{ message }}
+          </p>
+        }
+
+        <button uiButton type="submit" size="lg" class="w-full" [disabled]="loginForm().submitting()">
+          {{ loginForm().submitting() ? 'Entrando…' : 'Entrar' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</main>

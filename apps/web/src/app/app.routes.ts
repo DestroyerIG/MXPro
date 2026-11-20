@@ -1,14 +1,33 @@
 import { Routes } from '@angular/router';
+import { guestOnly, redirectToHome, requireRoles } from './core/auth/auth.guards';
 
 /**
  * Rotas raiz. Cada área é carregada sob demanda (lazy loading) com `loadChildren`:
  * o código de /cronometragem não é baixado por quem só abre /ao-vivo, e vice-versa.
  * URLs em pt-BR (o usuário vê); nomes de pastas/classes em inglês (convenção do código).
+ *
+ * `canMatch` decide quem pode abrir cada área (UX). A permissão de verdade é checada na API.
  */
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'painel' },
-  { path: 'painel', loadChildren: () => import('./features/organizer/organizer.routes') },
-  { path: 'cronometragem', loadChildren: () => import('./features/timekeeping/timekeeping.routes') },
+  // Raiz: cada perfil cai na sua área; quem não está logado, no login.
+  { path: '', pathMatch: 'full', redirectTo: redirectToHome },
+  {
+    path: 'entrar',
+    canMatch: [guestOnly],
+    loadComponent: () => import('./features/auth/login-page/login-page').then((m) => m.LoginPage),
+    title: 'Entrar | MXPro',
+  },
+  {
+    path: 'painel',
+    canMatch: [requireRoles('ORGANIZER', 'SECRETARY')],
+    loadChildren: () => import('./features/organizer/organizer.routes'),
+  },
+  {
+    path: 'cronometragem',
+    canMatch: [requireRoles('TIMEKEEPER', 'ORGANIZER')],
+    loadChildren: () => import('./features/timekeeping/timekeeping.routes'),
+  },
+  // Públicas (sem login): resultados ao vivo/telão e o catálogo de componentes.
   { path: 'ao-vivo', loadChildren: () => import('./features/live/live.routes') },
   { path: 'componentes', loadChildren: () => import('./features/design-system/design-system.routes') },
   {

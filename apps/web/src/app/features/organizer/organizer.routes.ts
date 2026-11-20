@@ -9,8 +9,6 @@ import { TimingHub } from './timing-hub/timing-hub';
  * Área do organizador (/painel). O OrganizerShell é o layout; as páginas são rotas filhas.
  * Os itens do menu que ainda não têm tela usam o ComingSoon com textos vindos do `data`.
  * Este arquivo inteiro só é baixado quando alguém entra em /painel (lazy loading).
- *
- * TODO(auth): proteger com guard de perfil (ORGANIZER/SECRETARY) quando existir login.
  */
 export default [
   {

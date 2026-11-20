@@ -10,7 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ROLE_LABELS, SessionService } from '../../../core/session/session.service';
+import { ROLE_LABELS } from '@mxpro/shared';
+import { SessionService } from '../../../core/auth/session.service';
 import { ThemePreference, ThemeService } from '../../../core/theme/theme.service';
 import { BrandLogo } from '../../../shared/brand-logo/brand-logo';
 import { ORGANIZER_NAV } from '../organizer-nav';
@@ -41,7 +42,8 @@ export class OrganizerShell {
   private readonly theme = inject(ThemeService);
 
   protected readonly nav = ORGANIZER_NAV;
-  protected readonly user = inject(SessionService).user;
+  private readonly session = inject(SessionService);
+  protected readonly user = this.session.user;
   protected readonly roleLabel = computed(() => {
     const u = this.user();
     return u ? ROLE_LABELS[u.role] : '';
@@ -86,5 +88,9 @@ export class OrganizerShell {
 
   protected cycleTheme(): void {
     this.theme.preference.update((p) => THEME_CYCLE[p]);
+  }
+
+  protected logout(): void {
+    void this.session.logout();
   }
 }

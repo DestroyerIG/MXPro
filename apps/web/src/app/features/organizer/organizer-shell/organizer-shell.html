@@ -92,6 +92,13 @@
         <span>Tema</span>
         <span class="font-bold text-on-chrome">{{ themeLabel() }}</span>
       </button>
+      <button
+        type="button"
+        class="flex h-9 cursor-pointer items-center rounded-md border border-white/20 px-3 text-on-chrome-muted hover:bg-chrome-hover hover:text-on-chrome"
+        (click)="logout()"
+      >
+        Sair
+      </button>
     </div>
   </aside>
 

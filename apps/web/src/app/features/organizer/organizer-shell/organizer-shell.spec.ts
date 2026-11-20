@@ -1,11 +1,16 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../../app.routes';
+import { LOGOUT_URL } from '../../../core/auth/session.service';
+import { provideTestHttp, signInAs } from '../../../core/auth/session.testing';
 
 describe('OrganizerShell (layout do painel)', () => {
-  beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideRouter(routes, withComponentInputBinding())] });
+  beforeEach(async () => {
+    localStorage.clear();
+    TestBed.configureTestingModule({ providers: [provideRouter(routes, withComponentInputBinding()), provideTestHttp()] });
+    await signInAs('ORGANIZER');
   });
 
   async function open(url: string) {
@@ -63,5 +68,23 @@ describe('OrganizerShell (layout do painel)', () => {
   it('mostra o logo da marca padrão (MX + PRO)', async () => {
     const { root } = await open('/painel');
     expect(root.querySelector('app-brand-logo')?.textContent?.replace(/\s/g, '')).toBe('MXPRO');
+  });
+
+  it('mostra quem está logado e o perfil', async () => {
+    const { root } = await open('/painel');
+    expect(root.querySelector('aside')?.textContent).toContain('Marina Duarte');
+    expect(root.querySelector('aside')?.textContent).toContain('Organizador');
+  });
+
+  it('Sair encerra a sessão na API, esquece o usuário e abre o login', async () => {
+    const { harness, root } = await open('/painel');
+    const sair = Array.from(root.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Sair')!;
+    sair.click();
+    const req = TestBed.inject(HttpTestingController).expectOne(LOGOUT_URL);
+    expect(req.request.method).toBe('POST');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/entrar');
+    expect(localStorage.getItem('mxpro.session-user')).toBeNull();
   });
 });
