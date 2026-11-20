@@ -8,6 +8,7 @@ import { registerAuth } from './auth/auth.plugin.ts';
 import { registerErrorHandling } from './errors.ts';
 import { authRoutes } from './routes/auth.ts';
 import { healthRoutes } from './routes/health.ts';
+import { settingsRoutes } from './routes/settings.ts';
 import { userRoutes } from './routes/users.ts';
 
 declare module 'fastify' {
@@ -62,6 +63,7 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
       await api.register(healthRoutes);
       await api.register(authRoutes);
       await api.register(userRoutes);
+      await api.register(settingsRoutes);
     },
     { prefix: '/api' },
   );
