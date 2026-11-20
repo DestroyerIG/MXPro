@@ -21,6 +21,8 @@ const schema = z
       .transform((v) => (v ? v.split(',').map((o) => o.trim()).filter(Boolean) : undefined))
       .pipe(z.array(z.url('cada origem deve ser uma URL, ex.: https://meudominio.com.br')).optional()),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+    /** Duração da sessão sem uso. Renova sozinha enquanto o usuário usa o sistema. */
+    SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(12),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production' && !env.CORS_ORIGINS?.length) {
@@ -35,6 +37,9 @@ export interface AppConfig {
   databaseUrl: string;
   corsOrigins: string[];
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+  sessionTtlMs: number;
+  /** Cookie só por HTTPS (produção). Em desenvolvimento o front roda em http://localhost. */
+  cookieSecure: boolean;
 }
 
 export function loadConfig(env: Record<string, string | undefined>): AppConfig {
@@ -51,5 +56,7 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     databaseUrl: e.DATABASE_URL,
     corsOrigins: e.CORS_ORIGINS ?? [DEV_ORIGIN],
     logLevel: e.LOG_LEVEL,
+    sessionTtlMs: e.SESSION_TTL_HOURS * 3_600_000,
+    cookieSecure: e.NODE_ENV === 'production',
   };
 }

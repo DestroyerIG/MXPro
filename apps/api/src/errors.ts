@@ -1,12 +1,8 @@
+import type { ApiErrorBody } from '@mxpro/shared';
 import type { FastifyError, FastifyInstance } from 'fastify';
 import { ZodError } from 'zod';
 
-/** Corpo de TODA resposta de erro da API (docs/arquitetura.md §6). */
-export interface ApiErrorBody {
-  code: string;
-  message: string;
-  details?: unknown;
-}
+export type { ApiErrorBody };
 
 /**
  * Erro de negócio esperado. Lançado por services/rotas e convertido em resposta pelo handler.

@@ -1,10 +1,14 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import type { PrismaClient } from '@mxpro/db';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { AppConfig } from './config.ts';
+import { registerAuth } from './auth/auth.plugin.ts';
 import { registerErrorHandling } from './errors.ts';
+import { authRoutes } from './routes/auth.ts';
 import { healthRoutes } from './routes/health.ts';
+import { userRoutes } from './routes/users.ts';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -44,12 +48,20 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
   await app.register(helmet);
   await app.register(cors, {
     origin: config.corsOrigins,
-    credentials: true, // o login usará cookie httpOnly
+    credentials: true, // o login usa cookie httpOnly
   });
+  // Limite de requisições: desligado por padrão, ligado rota a rota (ex.: login).
+  await app.register(rateLimit, {
+    global: false,
+    errorResponseBuilder: () => ({ statusCode: 429, code: 'RATE_LIMITED', message: 'Muitas tentativas.' }),
+  });
+  await registerAuth(app, config);
 
   await app.register(
     async (api) => {
       await api.register(healthRoutes);
+      await api.register(authRoutes);
+      await api.register(userRoutes);
     },
     { prefix: '/api' },
   );
