@@ -1,0 +1,98 @@
+<!--
+  Tamanhos em "vh": tudo escala com a altura da TV, de um monitor pequeno a um telão.
+  O tema é fixo escuro (tokens live-*), não segue o tema do usuário.
+-->
+<div
+  class="fixed inset-0 flex flex-col bg-live-bg p-[1.2vh] text-[2.6vh] text-live-text"
+  [class.cursor-none]="!controlsVisible()"
+>
+  <header class="flex items-center justify-between gap-[2vh] rounded-b-[1vh] bg-brand px-[2.4vh] py-[1.4vh] font-bold">
+    <h1 class="truncate text-[3.2vh]">
+      AO VIVO
+      @if (heat(); as h) {
+        • {{ h.categoryName }} - {{ h.label }}
+      }
+    </h1>
+    @if (heat(); as h) {
+      <p class="shrink-0 text-[3.2vh]">
+        @if (h.finished) {
+          BANDEIRADA
+        } @else {
+          Volta {{ h.leaderLaps }}/{{ h.totalLaps }}
+        }
+      </p>
+    }
+  </header>
+
+  @if (feed.stale()) {
+    <p role="status" class="mt-[1vh] rounded-[0.8vh] bg-warn px-[2vh] py-[0.8vh] text-[2.2vh] font-bold text-on-warn">
+      Sem conexão. Classificação atualizada às {{ updatedAt() }}; reconectando…
+    </p>
+  }
+
+  <main class="mt-[1.5vh] min-h-0 flex-1">
+    @if (pageRows().length) {
+      <table class="w-full border-collapse">
+        <caption class="sr-only">Classificação ao vivo</caption>
+        <thead>
+          <tr class="text-left text-[1.8vh] text-live-muted">
+            <th scope="col" class="w-[8%] px-[1.6vh] py-[1vh] font-bold">POS</th>
+            <th scope="col" class="w-[9%] px-[1.6vh] font-bold">Nº</th>
+            <th scope="col" class="px-[1.6vh] font-bold">PILOTO</th>
+            <th scope="col" class="w-[11%] px-[1.6vh] font-bold">VOLTAS</th>
+            <th scope="col" class="w-[17%] px-[1.6vh] font-bold">MELHOR</th>
+            <th scope="col" class="w-[15%] px-[1.6vh] font-bold">DIF.</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of pageRows(); track row.raceNumber) {
+            <tr
+              class="border-t border-live-line"
+              [class.bg-live-leader]="row.position === 1"
+              [class.live-moved-up]="row.movedUp"
+            >
+              <td class="px-[1.6vh] py-[1.25vh] font-bold" [class.text-brand]="row.position <= 3">{{ row.position }}</td>
+              <td class="px-[1.6vh] font-bold">{{ row.raceNumber }}</td>
+              <td class="max-w-0 truncate px-[1.6vh] font-bold">{{ row.displayName }}</td>
+              <td class="px-[1.6vh]">{{ row.laps }}</td>
+              <td class="px-[1.6vh] text-live-time">{{ row.best }}</td>
+              <td class="px-[1.6vh]">{{ row.gapText }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="grid h-full place-items-center text-[3vh] text-live-muted">Aguardando a largada…</p>
+    }
+  </main>
+
+  <footer class="mt-[1vh] grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-[2vh] border-t border-live-line px-[1.6vh] pt-[1.2vh]">
+    <app-brand-logo />
+    <div class="flex min-h-[6vh] items-center justify-center gap-[3vh]">
+      @for (s of sponsors(); track s.name) {
+        <img [src]="s.logoUrl" [alt]="s.name" class="max-h-[6vh] w-auto" />
+      } @empty {
+        <span class="text-[1.8vh] text-live-muted">Patrocinadores: espaço para logos do evento</span>
+      }
+    </div>
+    @if (pageCount() > 1) {
+      <p class="flex items-center gap-[0.8vh] text-[1.8vh] text-live-muted">
+        @for (p of pages(); track p) {
+          <span class="size-[1.2vh] rounded-full" [class]="p === currentPage() ? 'bg-brand' : 'bg-live-line'" aria-hidden="true"></span>
+        }
+        <span class="ml-[0.6vh]"><span class="sr-only">Página </span>{{ currentPage() + 1 }}/{{ pageCount() }}</span>
+      </p>
+    }
+  </footer>
+
+  <!-- Aparece só ao mexer o mouse/teclado; some em 3 s para não ficar na TV. -->
+  @if (controlsVisible()) {
+    <button
+      type="button"
+      class="fixed top-[10vh] right-[2vh] cursor-pointer rounded-md bg-live-surface px-4 py-2 text-sm font-bold text-live-text ring-1 ring-live-line hover:bg-live-line"
+      (click)="toggleFullscreen()"
+    >
+      Tela cheia
+    </button>
+  }
+</div>
