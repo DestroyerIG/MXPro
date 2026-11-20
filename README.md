@@ -199,6 +199,13 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 | Endpoint | Descrição |
 |---|---|
 | `GET /api/health` | `200` com API e banco no ar; `503 "degradado"` se o banco cair |
+| `POST /api/auth/login` | Login (e-mail e senha); cria sessão em cookie httpOnly. Limite: 10 tentativas/15 min por IP |
+| `POST /api/auth/logout` | Encerra a sessão (vale na hora) |
+| `GET /api/auth/me` | Usuário logado e validade da sessão |
+| `GET /api/users` | Equipe da organização — **somente organizador** |
+
+Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
+contra CSRF. Detalhes e motivos em [`docs/decisions/0002`](docs/decisions/0002-autenticacao-por-sessao-em-cookie.md).
 
 Todo erro da API segue o formato `{ code, message, details? }`, com mensagens em português.
 
@@ -223,7 +230,8 @@ MXPro/
 │              ├─ live/         #   resultado ao vivo / telão
 │              └─ design-system/#   catálogo de componentes
 ├─ packages/
-│  └─ db/                       # Prisma: schema, migrations, seed e cliente do banco
+│  ├─ db/                       # Prisma: schema, migrations, seed e cliente do banco
+│  └─ shared/                   # schemas Zod e tipos usados pela API e pelo front
 │                               # (próximas fases: rules-engine, shared, timing-adapters)
 └─ docs/
    ├─ arquitetura.md            # escopo, princípios, arquitetura, convenções e roadmap
@@ -256,7 +264,7 @@ pnpm exec ng build
 
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
-- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • autenticação e perfis de acesso (RBAC) • marca via API • CI
+- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • marca via API • login no front • CI
 - [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
