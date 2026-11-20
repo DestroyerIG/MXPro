@@ -149,7 +149,9 @@ Detalhes em [`docs/arquitetura.md`](docs/arquitetura.md).
 git clone https://github.com/DestroyerIG/MXPro.git
 cd MXPro
 pnpm install
-pnpm dev            # abre o front em http://localhost:4200
+cp .env.example .env
+pnpm db:up && pnpm db:migrate && pnpm db:seed   # banco (requer Docker)
+pnpm dev            # front em http://localhost:4200 + API em http://localhost:3000
 ```
 
 ### Banco de dados (desenvolvimento)
@@ -171,7 +173,7 @@ Usuários do seed: `organizador@mxpro.test`, `secretaria@mxpro.test`, `cronometr
 
 | Comando (na raiz) | O que faz |
 |---|---|
-| `pnpm dev` | Servidor de desenvolvimento do front (`ng serve`) |
+| `pnpm dev` | Front (`ng serve`) e API (`tsx watch`) juntos; `dev:web` / `dev:api` sobem só um |
 | `pnpm build` | Build de produção de todos os pacotes |
 | `pnpm test` | Testes unitários de todos os pacotes |
 | `pnpm typecheck` | Checagem de tipos (`tsc --noEmit`) |
@@ -192,6 +194,14 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 | `/ao-vivo/telao` | Classificação ao vivo em modo telão | Público |
 | `/componentes` | Catálogo do design system | Desenvolvimento |
 
+**API** (`http://localhost:3000`)
+
+| Endpoint | Descrição |
+|---|---|
+| `GET /api/health` | `200` com API e banco no ar; `503 "degradado"` se o banco cair |
+
+Todo erro da API segue o formato `{ code, message, details? }`, com mensagens em português.
+
 > Na tela de cronometragem, em modo de desenvolvimento, a opção **"Simular queda de internet"** permite testar o
 > fluxo offline sem desligar a rede.
 
@@ -200,6 +210,7 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 ```
 MXPro/
 ├─ apps/
+│  ├─ api/                      # Fastify: configuração validada, erros padronizados, health check
 │  └─ web/                      # Angular: painel, cronometragem, ao vivo
 │     └─ src/
 │        ├─ styles/tokens.css   # design tokens (claro, escuro e telão)
@@ -245,7 +256,7 @@ pnpm exec ng build
 
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
-- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • API Fastify • autenticação e perfis de acesso (RBAC) • marca via API • CI
+- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • autenticação e perfis de acesso (RBAC) • marca via API • CI
 - [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
