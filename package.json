@@ -1,0 +1,16 @@
+{
+  "name": "mxpro",
+  "private": true,
+  "description": "Plataforma de Gestão de Provas Off-Road",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22.20"
+  },
+  "scripts": {
+    "dev": "pnpm --filter web start",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

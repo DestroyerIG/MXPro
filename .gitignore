@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.angular/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Documento de escopo do contratante (confidencial)
+escopo_ilustrado_sistema_motocross.pdf
+docs/escopo/*.pdf

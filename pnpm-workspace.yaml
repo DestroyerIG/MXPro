@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Pacotes com scripts de build nativos: o Angular CLI os deixa desligados por padrão
+# (os binários pré-compilados das dependências opcionais já bastam).
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  lmdb: false
+  msgpackr-extract: false
