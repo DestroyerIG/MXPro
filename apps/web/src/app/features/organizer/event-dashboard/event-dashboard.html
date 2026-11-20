@@ -1,0 +1,78 @@
+@if (dashboard.hasValue()) {
+  @let d = dashboard.value();
+  @let tz = d.event.timeZone;
+
+  <header class="flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-bold">{{ d.event.name }}</h1>
+      <p class="mt-1 text-sm text-ink-2">
+        {{ d.event.startsAt | eventDate: tz : 'day' }} • {{ d.event.venue }} • {{ d.event.modalities.join(' + ') }}
+      </p>
+    </div>
+    <ui-status-badge [tone]="registrationWindow[d.event.registrationWindow].tone">
+      {{ registrationWindow[d.event.registrationWindow].label }}
+    </ui-status-badge>
+  </header>
+
+  <section aria-label="Totais do evento" class="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+    <ui-stat-tile label="Inscritos" [value]="d.totals.registered" tone="brand" />
+    <ui-stat-tile label="Pagos" [value]="d.totals.paid" tone="ok" />
+    <ui-stat-tile label="Pendentes" [value]="d.totals.pending" tone="warn" />
+    <ui-stat-tile label="Baterias" [value]="d.totals.heats" tone="info" />
+  </section>
+
+  <div class="mt-4 grid gap-4 xl:grid-cols-2">
+    <ui-card heading="Próximas baterias">
+      @if (d.upcomingHeats.length) {
+        <ul class="border-t border-line-strong">
+          @for (heat of d.upcomingHeats; track heat.id) {
+            <li class="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-line py-2 sm:grid-cols-[3.5rem_minmax(0,1fr)_8.5rem]">
+              <time class="font-bold text-brand-text" [attr.datetime]="heat.startsAt">
+                {{ heat.startsAt | eventDate: tz : 'time' }}
+              </time>
+              <span class="min-w-0">
+                <span class="block truncate font-bold">{{ heat.categoryName }} - {{ heat.label }}</span>
+                <span class="block text-xs text-ink-2">{{ heat.pilotCount }} pilotos</span>
+              </span>
+              <ui-status-badge class="w-full" [tone]="heatStatus[heat.status].tone">
+                {{ heatStatus[heat.status].label }}
+              </ui-status-badge>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="text-ink-2">Nenhuma bateria programada. Crie as baterias em Eventos.</p>
+      }
+    </ui-card>
+
+    <ui-card heading="Inscritos por categoria">
+      @if (categoryBars().length) {
+        <app-category-bars [items]="categoryBars()" />
+      } @else {
+        <p class="text-ink-2">Ainda não há inscritos. Compartilhe o link de inscrição do evento.</p>
+      }
+    </ui-card>
+  </div>
+} @else if (dashboard.error()) {
+  <div role="alert" class="rounded-lg border-2 border-danger bg-surface p-6">
+    <h1 class="text-lg font-bold">Não foi possível carregar o painel do evento.</h1>
+    <p class="mt-1 text-ink-2">Verifique a conexão e tente de novo.</p>
+    <button uiButton class="mt-4" (click)="dashboard.reload()">Tentar de novo</button>
+  </div>
+} @else {
+  <!-- Carregando: esqueleto no formato da tela, para ela não "pular" quando os dados chegam. -->
+  <div aria-busy="true" aria-live="polite" class="animate-pulse">
+    <span class="sr-only">Carregando o painel do evento…</span>
+    <div class="h-8 w-2/3 rounded-md bg-line"></div>
+    <div class="mt-2 h-4 w-1/2 rounded-md bg-line"></div>
+    <div class="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="h-20 rounded-lg bg-line"></div>
+      }
+    </div>
+    <div class="mt-4 grid gap-4 xl:grid-cols-2">
+      <div class="h-72 rounded-lg bg-line"></div>
+      <div class="h-72 rounded-lg bg-line"></div>
+    </div>
+  </div>
+}

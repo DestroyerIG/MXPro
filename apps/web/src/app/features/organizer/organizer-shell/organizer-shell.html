@@ -1,0 +1,101 @@
+<!-- Link de atalho: primeiro item focável da página, para quem navega por teclado pular o menu. -->
+<a
+  href="#conteudo"
+  (click)="skipToContent($event)"
+  class="sr-only z-50 rounded-md bg-brand-strong px-4 py-2 font-bold text-on-brand focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+>
+  Pular para o conteúdo
+</a>
+
+<div class="min-h-dvh lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
+  <!-- Barra superior: só no celular/tablet -->
+  <header class="sticky top-0 z-30 flex h-14 items-center justify-between bg-chrome px-4 text-on-chrome lg:hidden">
+    <app-brand-logo />
+    <button
+      #menuButton
+      type="button"
+      class="flex h-10 cursor-pointer items-center gap-2 rounded-md px-3 font-bold hover:bg-chrome-hover"
+      aria-controls="menu-lateral"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="openMenu()"
+    >
+      <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
+        <path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      Menu
+    </button>
+  </header>
+
+  <!-- Fundo escurecido atrás da gaveta (celular/tablet) -->
+  @if (menuOpen()) {
+    <div class="fixed inset-0 z-30 bg-black/50 lg:hidden" aria-hidden="true" (click)="closeMenu()"></div>
+  }
+
+  <aside
+    id="menu-lateral"
+    class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-chrome text-on-chrome transition-transform duration-200
+           lg:visible lg:sticky lg:top-0 lg:h-dvh lg:translate-x-0"
+    [class.-translate-x-full]="!menuOpen()"
+    [class.invisible]="!menuOpen()"
+  >
+    <div class="flex h-16 items-center justify-between px-5">
+      <app-brand-logo />
+      <button
+        type="button"
+        class="grid size-10 cursor-pointer place-items-center rounded-md text-on-chrome-muted hover:bg-chrome-hover lg:hidden"
+        aria-label="Fechar menu"
+        (click)="closeMenu()"
+      >
+        ✕
+      </button>
+    </div>
+
+    <nav aria-label="Menu do organizador" class="flex-1 overflow-y-auto px-3 py-2">
+      <ul class="grid gap-1">
+        @for (item of nav; track item.path) {
+          <li>
+            <!--
+              routerLinkActive + ariaCurrentWhenActive: o Angular coloca aria-current="page" no link da
+              página atual. O visual ativo (pílula laranja) é aplicado a partir desse atributo, então
+              o que o leitor de tela anuncia e o que se vê nunca ficam diferentes.
+            -->
+            <!-- #firstLink se repete no @for; viewChild() pega o primeiro, que é o que queremos focar. -->
+            <a
+              #firstLink
+              [routerLink]="item.path ? item.path : '.'"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="{ exact: item.path === '' }"
+              ariaCurrentWhenActive="page"
+              class="block rounded-md px-3 py-2 text-sm text-on-chrome-muted hover:bg-chrome-hover hover:text-on-chrome
+                     aria-[current=page]:bg-brand-strong aria-[current=page]:font-bold aria-[current=page]:text-on-brand"
+              (click)="closeMenu()"
+            >
+              {{ item.label }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="grid gap-3 border-t border-chrome-hover px-5 py-4 text-sm">
+      @if (user(); as u) {
+        <div>
+          <p class="font-bold">{{ u.name }}</p>
+          <p class="text-on-chrome-muted">{{ roleLabel() }}</p>
+        </div>
+      }
+      <button
+        type="button"
+        class="flex h-9 cursor-pointer items-center justify-between rounded-md border border-white/20 px-3 text-on-chrome-muted hover:bg-chrome-hover hover:text-on-chrome"
+        (click)="cycleTheme()"
+      >
+        <span>Tema</span>
+        <span class="font-bold text-on-chrome">{{ themeLabel() }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <main #content id="conteudo" tabindex="-1" class="min-w-0 px-4 py-6 outline-none sm:px-6 lg:px-8 lg:py-8">
+    <router-outlet />
+  </main>
+</div>
