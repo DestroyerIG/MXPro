@@ -30,3 +30,15 @@ export async function integrationApp(db: PrismaClient, env: Record<string, strin
   const config = loadConfig({ NODE_ENV: 'test', DATABASE_URL: url, CORS_ORIGINS: TEST_ORIGIN, ...env });
   return buildApp({ config, db });
 }
+
+export const SESSION_COOKIE = 'mxpro_session';
+
+/** Cria um usuário do perfil, faz login e devolve uma função para chamar a API como ele. */
+export async function actingAs(app: Awaited<ReturnType<typeof integrationApp>>, db: PrismaClient, role: Role) {
+  const email = `${role.toLowerCase()}-${Math.random().toString(36).slice(2, 8)}@mxpro.test`;
+  await createUser(db, { email, role });
+  const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email, password: PASSWORD } });
+  const token = login.cookies.find((c) => c.name === SESSION_COOKIE)!.value;
+  return (method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', url: string, payload?: object) =>
+    app.inject({ method, url, cookies: { [SESSION_COOKIE]: token }, ...(payload ? { payload } : {}) });
+}
