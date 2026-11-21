@@ -37,5 +37,5 @@ volta mínima ao calcular o resultado.
 ## Consequências
 
 - `HeatInfo` passa a carregar `minLapMs` (vem da configuração da prova).
-- O motor de regras precisa tratar voltas abaixo da mínima de forma determinística (ignorar a passagem ou somar à
-  próxima volta — **a definir com o contratante**).
+- O motor de regras trata voltas abaixo da mínima de forma determinística: **a passagem é ignorada** (decidido no
+  [ADR 0003](0003-regras-do-motocross.md)).
