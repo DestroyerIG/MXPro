@@ -164,12 +164,20 @@ Requer **Docker** em execução. O Postgres sobe na porta **5433** (para não co
 cp .env.example .env   # ajuste se necessário; o .env nunca é versionado
 pnpm db:up             # sobe o PostgreSQL 18 (docker compose)
 pnpm db:migrate        # aplica as migrations
-pnpm db:seed           # dados fictícios: 1 usuário por perfil (senha = SEED_PASSWORD do .env)
+pnpm db:seed           # dados fictícios: usuários, marca, campeonato, etapas, categorias e baterias
 pnpm db:studio         # (opcional) navegador visual do banco
 ```
 
 Usuários do seed: `organizador@mxpro.test`, `secretaria@mxpro.test`, `cronometrista@mxpro.test` e
-`piloto@mxpro.test`. O seed é idempotente e se recusa a rodar com `NODE_ENV=production`.
+`piloto@mxpro.test`, todos com a senha `SEED_PASSWORD` do `.env`. O seed também cria a "Copa Verão de
+Motocross" 2027: a Etapa 2 publicada, com 6 categorias e 6 baterias, e a Etapa 3 em rascunho. É idempotente
+e se recusa a rodar com `NODE_ENV=production`.
+
+**Modelo de eventos:** campeonato → evento (etapa ou avulso, de um ou mais dias) → categorias do evento
+(modalidade, valor em centavos e vagas, a partir de um catálogo único de categorias) → baterias, que podem
+juntar mais de uma categoria. Regras críticas também são garantidas pelo próprio banco (`CHECK` e chaves
+compostas): datas e janela de inscrição coerentes, valores não negativos, categoria sem duplicata e bateria
+ligada só a categorias do mesmo evento.
 
 ### Scripts
 
