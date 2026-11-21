@@ -65,7 +65,8 @@ export async function seedEvents(prisma: PrismaClient): Promise<void> {
     city: 'Campo Largo',
     state: 'PR',
     status: 'PUBLISHED' as const,
-    registrationOpensAt: new Date('2027-01-15T12:00:00Z'),
+    // O PDF não fixa a abertura; aqui já abriu, para dar para testar a inscrição em desenvolvimento.
+    registrationOpensAt: new Date('2026-11-01T12:00:00Z'),
     registrationClosesAt: new Date('2027-03-11T02:59:00Z'), // 10/03 23:59 em São Paulo
   };
   await prisma.event.upsert({ where: { id: STAGE_2_ID }, create: { id: STAGE_2_ID, ...stage2 }, update: stage2 });

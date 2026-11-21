@@ -27,6 +27,17 @@ export const routes: Routes = [
     canMatch: [requireRoles('TIMEKEEPER', 'ORGANIZER')],
     loadChildren: () => import('./features/timekeeping/timekeeping.routes'),
   },
+  // Inscrição pelo link do evento (pública: quem não tem conta cria na própria inscrição).
+  {
+    path: 'inscricao/:eventId',
+    loadComponent: () => import('./features/registration/registration-page/registration-page').then((m) => m.RegistrationPage),
+    title: 'Inscrição | MXPro',
+  },
+  {
+    path: 'minhas-inscricoes',
+    canMatch: [requireRoles('PILOT')],
+    loadChildren: () => import('./features/registration/pilot.routes'),
+  },
   // Públicas (sem login): resultados ao vivo/telão e o catálogo de componentes.
   { path: 'ao-vivo', loadChildren: () => import('./features/live/live.routes') },
   { path: 'componentes', loadChildren: () => import('./features/design-system/design-system.routes') },

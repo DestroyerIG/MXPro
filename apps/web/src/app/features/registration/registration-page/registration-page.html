@@ -1,0 +1,123 @@
+<app-pilot-frame [heading]="heading()">
+  @if (event.hasValue() ? event.value() : null; as e) {
+    <p class="text-sm text-ink-2">{{ period() }} • {{ e.venue }}, {{ e.city }}/{{ e.state }}</p>
+
+    @if (closedMessage(); as message) {
+      <p class="mt-4 rounded-lg border border-line-strong bg-surface p-4 font-bold">{{ message }}</p>
+    } @else if (isStaff()) {
+      <div class="mt-4 rounded-lg border border-line-strong bg-surface p-4 text-sm">
+        <p class="font-bold">Você está conectado como equipe ({{ user()?.name }}).</p>
+        <p class="mt-1">Para se inscrever, saia e entre com a conta do piloto (ou crie uma).</p>
+        <button uiButton type="button" variant="secondary" class="mt-3" (click)="session.logout()">Sair</button>
+      </div>
+    } @else {
+      <form novalidate class="mt-4 grid gap-4" (submit)="onSubmit($event)">
+        @if (needsAccount()) {
+          <section class="grid gap-4 rounded-lg border border-line bg-surface p-4" aria-labelledby="conta-titulo">
+            <div>
+              <h2 id="conta-titulo" class="text-base font-bold">Sua conta</h2>
+              <p class="mt-1 text-sm text-ink-2">
+                Já se inscreveu antes?
+                <a routerLink="/entrar" [queryParams]="loginLink()" class="font-bold text-brand-text underline">Entrar</a>
+              </p>
+            </div>
+            <ui-form-field label="Nome completo" required [error]="fieldError('name')">
+              <input uiControl type="text" autocomplete="name" [formField]="registrationForm.name" />
+            </ui-form-field>
+            <ui-form-field label="E-mail" required hint="Para entrar depois e receber avisos da prova." [error]="fieldError('email')">
+              <input uiControl type="email" inputmode="email" autocomplete="email" [formField]="registrationForm.email" />
+            </ui-form-field>
+            <ui-form-field label="Crie uma senha" required hint="Pelo menos 8 caracteres." [error]="fieldError('password')">
+              <input uiControl type="password" autocomplete="new-password" [formField]="registrationForm.password" />
+            </ui-form-field>
+            <div>
+              <label class="flex items-start gap-3 text-sm">
+                <input type="checkbox" class="mt-0.5 size-5 shrink-0 accent-brand" [formField]="registrationForm.acceptPrivacy" />
+                <span>Li e aceito a política de privacidade</span>
+              </label>
+              <details class="mt-2 text-sm text-ink-2">
+                <summary class="cursor-pointer font-bold text-brand-text">Ler a política de privacidade</summary>
+                @if (legal.provisional) {
+                  <p class="mt-2 text-xs font-bold">Texto provisório, a validar com a organização.</p>
+                }
+                <ul class="mt-2 list-disc space-y-1 pl-5">
+                  @for (item of legal.privacy; track $index) {
+                    <li>{{ item }}</li>
+                  }
+                </ul>
+              </details>
+              @if (fieldError('acceptPrivacy'); as message) {
+                <p class="mt-1 text-xs font-bold text-danger-text">{{ message }}</p>
+              }
+            </div>
+          </section>
+        } @else {
+          <p class="text-sm">Inscrevendo como <strong>{{ user()?.name }}</strong>.</p>
+        }
+
+        <section class="grid gap-4 rounded-lg border border-line bg-surface p-4" aria-labelledby="inscricao-titulo">
+          <h2 id="inscricao-titulo" class="text-base font-bold">Inscrição</h2>
+          <ui-form-field label="Categoria" required [hint]="selected()?.description ?? undefined" [error]="fieldError('eventCategoryId')">
+            <select uiControl [formField]="registrationForm.eventCategoryId">
+              <option value="">Escolha…</option>
+              @for (c of categories(); track c.id) {
+                <option [value]="c.id" [disabled]="c.soldOut">{{ c.label }}</option>
+              }
+            </select>
+          </ui-form-field>
+          @if (selected(); as c) {
+            @if (c.spotsLeft !== null && c.spotsLeft <= 10 && c.spotsLeft > 0) {
+              <p class="-mt-2 text-sm font-bold">
+                {{ c.spotsLeft === 1 ? 'Resta 1 vaga' : 'Restam ' + c.spotsLeft + ' vagas' }} nesta categoria.
+              </p>
+            }
+          }
+          <ui-form-field label="Nº de largada" required hint="O número da sua moto, de 1 a 3 dígitos." [error]="fieldError('raceNumber')">
+            <input uiControl type="text" inputmode="numeric" [formField]="registrationForm.raceNumber" />
+          </ui-form-field>
+          <ui-form-field label="Moto" required hint="Marca e modelo, ex.: Honda CRF 250F." [error]="fieldError('bike')">
+            <input uiControl type="text" [formField]="registrationForm.bike" />
+          </ui-form-field>
+          <ui-form-field label="Equipe" hint="Opcional." [error]="fieldError('team')">
+            <input uiControl type="text" [formField]="registrationForm.team" />
+          </ui-form-field>
+          <div>
+            <label class="flex items-start gap-3 text-sm">
+              <input type="checkbox" class="mt-0.5 size-5 shrink-0 accent-brand" [formField]="registrationForm.acceptWaiver" />
+              <span>Li e aceito o termo de responsabilidade</span>
+            </label>
+            <details class="mt-2 text-sm text-ink-2">
+              <summary class="cursor-pointer font-bold text-brand-text">Ler o termo</summary>
+              @if (legal.provisional) {
+                <p class="mt-2 text-xs font-bold">Texto provisório, a validar com a organização.</p>
+              }
+              <ul class="mt-2 list-disc space-y-1 pl-5">
+                @for (item of legal.waiver; track $index) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </details>
+            @if (fieldError('acceptWaiver'); as message) {
+              <p class="mt-1 text-xs font-bold text-danger-text">{{ message }}</p>
+            }
+          </div>
+        </section>
+
+        @if (error(); as message) {
+          <p role="alert" class="rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+        }
+        <button uiButton type="submit" size="lg" class="w-full" [disabled]="busy()">
+          {{ busy() ? 'Enviando…' : 'Continuar para pagamento' }}
+        </button>
+        <p class="text-center text-xs text-ink-2">A vaga e o número ficam reservados por 30 minutos para você pagar o Pix.</p>
+      </form>
+    }
+  } @else if (event.error()) {
+    <div role="alert" class="rounded-lg border-2 border-danger bg-surface p-4">
+      <p class="font-bold">Evento não encontrado.</p>
+      <p class="mt-1 text-sm">Confira o link com a organização da prova.</p>
+    </div>
+  } @else {
+    <div aria-busy="true" class="h-96 animate-pulse rounded-lg bg-line"><span class="sr-only">Carregando o evento…</span></div>
+  }
+</app-pilot-frame>

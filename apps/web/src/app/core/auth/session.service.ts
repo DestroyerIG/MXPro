@@ -20,7 +20,7 @@ export const HOME_BY_ROLE: Record<Role, string> = {
   ORGANIZER: '/painel',
   SECRETARY: '/painel',
   TIMEKEEPER: '/cronometragem',
-  PILOT: '/ao-vivo', // área do piloto chega na fase 7; até lá, os resultados ao vivo
+  PILOT: '/minhas-inscricoes', // a área completa do piloto (histórico, campeonato) chega na fase 7
 };
 
 /**
@@ -50,6 +50,16 @@ export class SessionService {
   restore(): Promise<SessionUser | null> {
     this.restoring ??= this.load();
     return this.restoring;
+  }
+
+  /**
+   * Pergunta de novo à API quem está logado. Usado quando a sessão foi aberta por outra chamada
+   * que não o login (ex.: a inscrição que cria a conta do piloto já devolve o cookie da sessão).
+   */
+  async refresh(): Promise<SessionUser | null> {
+    this.restoring = null;
+    await this.check();
+    return this._user();
   }
 
   async login(credentials: LoginRequest): Promise<SessionUser> {

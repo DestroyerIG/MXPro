@@ -25,7 +25,7 @@ describe('Rotas do app', () => {
     ['ORGANIZER', '/painel', 'app-event-dashboard'],
     ['SECRETARY', '/painel', 'app-event-dashboard'],
     ['TIMEKEEPER', '/cronometragem', 'app-timing-board'],
-    ['PILOT', '/ao-vivo/telao', 'app-live-board'],
+    ['PILOT', '/minhas-inscricoes', 'app-my-registrations'],
   ])('raiz (/) leva %s para a área dele (%s)', async (role, expected, selector) => {
     await signInAs(role);
     const { url, root } = await open('/');

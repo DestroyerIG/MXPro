@@ -20,6 +20,7 @@
     "@angular/router": "^22.3.0",
     "@mxpro/rules-engine": "workspace:*",
     "@mxpro/shared": "workspace:*",
+    "qrcode-generator": "2.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
