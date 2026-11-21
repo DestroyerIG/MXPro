@@ -272,8 +272,9 @@ MXPro/
 │              └─ design-system/#   catálogo de componentes
 ├─ packages/
 │  ├─ db/                       # Prisma: schema, migrations, seed e cliente do banco
+│  ├─ rules-engine/             # motor de regras: funções puras e determinísticas (sem banco/rede/relógio)
 │  └─ shared/                   # schemas Zod e tipos usados pela API e pelo front
-│                               # (próximas fases: rules-engine, shared, timing-adapters)
+│                               # (próxima: timing-adapters, para leitores de transponder)
 └─ docs/
    ├─ arquitetura.md            # escopo, princípios, arquitetura, convenções e roadmap
    ├─ design/                   # direção visual e prévia interativa
@@ -314,7 +315,9 @@ pnpm build
       cronometragem para tablet e telão ao vivo (dados fictícios)
 - [x] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • ~~CI~~ ✓
 - [x] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria, e painel do evento com dados reais
-- [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
+- [ ] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • resultado da bateria (tempo + voltas,
+      volta mínima, penalidades, DSQ) • pontos e desempate • configuração por categoria (API) • tela de regras.
+      Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
 - [ ] **Resultados ao vivo:** WebSocket, página pública para celular, resultado oficial em PDF e planilha
