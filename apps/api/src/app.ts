@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import type { AppConfig } from './config.ts';
 import { registerAuth } from './auth/auth.plugin.ts';
 import { registerErrorHandling } from './errors.ts';
+import { categoryRoutes } from './routes/categories.ts';
 import { championshipRoutes } from './routes/championships.ts';
 import { eventRoutes } from './routes/events.ts';
 import { authRoutes } from './routes/auth.ts';
@@ -68,6 +69,7 @@ export async function buildApp({ config, db }: AppDeps): Promise<FastifyInstance
       await api.register(settingsRoutes);
       await api.register(championshipRoutes);
       await api.register(eventRoutes);
+      await api.register(categoryRoutes);
     },
     { prefix: '/api' },
   );
