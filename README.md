@@ -271,6 +271,10 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `GET`/`POST /api/events/:id/heats` · `PATCH`/`DELETE …/:heatId` | Baterias com uma ou mais categorias e horário dentro das datas do evento (no fuso dele). Só bateria programada é alterada |
 | `GET`/`DELETE /api/payments/mercadopago` | Conta do Mercado Pago conectada (sem tokens) / desconectar — **somente organizador** |
 | `POST /api/payments/mercadopago/connect` | Inicia a conexão OAuth: devolve a URL de autorização do Mercado Pago — **somente organizador** |
+| `GET /api/public/events/:id` | Página pública do evento publicado (sem login): categorias, valores e vagas restantes. Nenhum dado pessoal |
+| `POST /api/public/events/:id/registrations` | Inscrição (sem login): na primeira vez cria a conta do piloto e já entra; reserva vaga e nº por 30 min e gera o Pix. Conta, inscrição e aceite do termo são gravados juntos (tudo ou nada); limite de tentativas por IP |
+| `GET /api/registrations/:id` · `POST …/pix` | Situação da inscrição para a tela "Aguardando pagamento" (consulta o Mercado Pago a cada ~10 s) e novo Pix depois de vencido — **o próprio piloto** (a equipe também consulta) |
+| `GET /api/me/registrations` | Inscrições do piloto logado |
 | `POST /api/payments/mercadopago/webhook` | Aviso do Mercado Pago (tópico `order`), sem login: confere a assinatura `x-signature`, grava o aviso uma vez e aplica o estado **consultado** no Mercado Pago (Pix pago confirma a inscrição; vencido libera a vaga) |
 | `GET /api/payments/mercadopago/callback` | Retorno do Mercado Pago (navegação do navegador): confere o `state`, troca o código pelos tokens e volta para `/painel/financeiro?mercadopago=<resultado>` |
 
@@ -353,7 +357,7 @@ pnpm build
       volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • ~~tela de regras~~ ✓.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
 - [ ] **Inscrição + Pix (Mercado Pago):** ~~modelo de dados~~ ✓ • ~~conexão da conta (OAuth)~~ ✓ • ~~cobrança Pix e
-      webhook~~ ✓ • API de inscrição • formulário público e pagamento • lista de inscritos, check-in e vistoria • grid.
+      webhook~~ ✓ • ~~API de inscrição~~ ✓ • formulário público e pagamento • lista de inscritos, check-in e vistoria • grid.
       Regras decididas nos ADRs [0004](docs/decisions/0004-inscricoes-e-pix.md) e [0005](docs/decisions/0005-mercado-pago-oauth.md)
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
 - [ ] **Resultados ao vivo:** WebSocket, página pública para celular, resultado oficial em PDF e planilha

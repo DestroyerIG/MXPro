@@ -61,6 +61,27 @@ marcação **antes** de checar vagas e números, dentro da mesma transação da 
 recusado por uma reserva que já venceu. Uma rotina periódica de limpeza pode vir depois; ela não é necessária para
 a regra funcionar.
 
+## API de inscrição (passo 6.4)
+
+- **Conta e sessão:**
+  - a inscrição pelo link público cria a conta do piloto (nome completo, e-mail, senha de 8 caracteres ou mais e
+    aceite da política de privacidade) e **já abre a sessão**;
+  - quem já tem conta entra antes;
+  - e-mail já cadastrado é recusado no campo, com o pedido de entrar com ele. O sistema não junta contas sozinho;
+  - a equipe logada não se inscreve (precisa da conta de piloto).
+- **Tudo ou nada:** conta, consentimentos e inscrição são gravados numa única transação. Número ocupado ou vaga
+  esgotada não deixam conta criada pela metade.
+- **Trava por categoria** (`pg_advisory_xact_lock`): as checagens de inscrições abertas, reservas vencidas, número
+  livre e vaga rodam com a categoria travada, então a última vaga disputada ao mesmo tempo vai para uma pessoa só.
+  Os índices únicos parciais continuam como última barreira.
+- **Inscrição gratuita** (valor 0): é confirmada na hora, sem Pix.
+- **Mercado Pago fora do ar na hora da inscrição:** a inscrição fica reservada por 30 minutos, a resposta traz o
+  motivo e o piloto pede o Pix de novo pela tela.
+- **"Gerar novo Pix" depois de vencida:** volta a reservar por 30 minutos, se as inscrições ainda estiverem abertas,
+  o número estiver livre e houver vaga.
+- **Quem vê uma inscrição:** o próprio piloto e a equipe (organizador e secretaria). Para outro piloto, a resposta é
+  404, sem revelar que a inscrição existe.
+
 ## Fica para os próximos passos
 
 - **Gateway:** definido depois deste ADR: **Mercado Pago**, na conta do contratante conectada por OAuth (ver
