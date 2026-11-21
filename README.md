@@ -7,6 +7,7 @@
 Inscrição com Pix, cronometragem offline na pista e resultado ao vivo no celular e no telão.<br>
 Motocross • Enduro • Enduro de Regularidade • Cross Country • Supercross/Arenacross
 
+[![CI](https://github.com/DestroyerIG/MXPro/actions/workflows/ci.yml/badge.svg)](https://github.com/DestroyerIG/MXPro/actions/workflows/ci.yml)
 ![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
@@ -178,6 +179,7 @@ Usuários do seed: `organizador@mxpro.test`, `secretaria@mxpro.test`, `cronometr
 | `pnpm build` | Build de produção de todos os pacotes |
 | `pnpm test` | Testes unitários de todos os pacotes |
 | `pnpm typecheck` | Checagem de tipos (`tsc --noEmit`) |
+| `pnpm lint` / `lint:fix` | ESLint em todo o monorepo (TypeScript, Angular e acessibilidade dos templates) |
 | `pnpm db:up` / `db:down` | Sobe / derruba o PostgreSQL de desenvolvimento |
 | `pnpm db:migrate` | Cria/aplica migrations (Prisma) |
 | `pnpm db:seed` | Popula o banco com dados fictícios |
@@ -253,31 +255,37 @@ MXPro/
 
 ## Qualidade e testes
 
-- **142 testes unitários** no front cobrindo:
+- **193 testes automatizados**: 142 no front, 38 de integração na API (com PostgreSQL de verdade) e 13 nos
+  contratos compartilhados. Cobrem:
   - formatação de tempo (truncamento de milésimos, contagem regressiva, diferença para o líder);
   - fuso horário do evento;
   - derivações do log de cronometragem (voltas, desfazer, penalidade, DSQ, eventos fora de ordem);
   - contraste da cor de marca;
   - sessão, login, guards de rota por perfil e sessão expirada (inclusive abertura offline);
-  - rotas, estados de carregamento e erro, e interações das telas.
+  - rotas, estados de carregamento e erro, e interações das telas;
+  - API: login, sessão, perfis de acesso, CSRF, limite de tentativas e marca do contratante.
+- **CI no GitHub Actions** a cada push e pull request: tipos, ESLint, migrations do zero + seed, testes
+  (com um Postgres no pipeline) e build de produção. As actions são fixadas pelo SHA do commit.
+- **ESLint** com `typescript-eslint` e `angular-eslint`, incluindo as regras de acessibilidade dos templates e
+  a proibição de promessas esquecidas sem `await`.
 - **Acessibilidade:** contraste AA medido em todos os pares de cor, foco sempre visível, navegação por teclado
   (abas com setas, "Pular para o conteúdo", Esc fecha menus), `aria-current`, `aria-live` para estados de conexão
   e textos para leitores de tela.
-- **Definição de pronto:** tipos e testes passando, build de produção sem avisos, componentes standalone + `OnPush`
+- **Definição de pronto:** tipos, lint e testes passando, build de produção sem avisos, componentes standalone + `OnPush`
   e rotas novas carregadas sob demanda.
 
 ```bash
-cd apps/web
-pnpm exec ng test --watch=false
 pnpm typecheck
-pnpm exec ng build
+pnpm lint
+pnpm test        # a API precisa do Postgres: pnpm db:up
+pnpm build
 ```
 
 ## Roadmap
 
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
-- [ ] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • CI
+- [x] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • ~~CI~~ ✓
 - [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
