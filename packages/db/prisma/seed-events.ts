@@ -4,6 +4,7 @@
  *
  * Ids fixos: rodar de novo atualiza as mesmas linhas (upsert) em vez de duplicar.
  */
+import { MOTOCROSS_TEMPLATE } from '@mxpro/rules-engine';
 import type { Modality, PrismaClient } from '../src/index.ts';
 
 const CHAMPIONSHIP_ID = '019a8f00-0000-7000-8000-000000000001';
@@ -90,6 +91,15 @@ export async function seedEvents(prisma: PrismaClient): Promise<void> {
       create: { id: ec.id, eventId: STAGE_2_ID, categoryId: categoryIdByName.get(name)!, ...data },
       update: data,
     });
+    // Regras da prova: categorias de Motocross partem do modelo pronto (versão 1). Cross Country
+    // ainda não tem regras no motor. `update: {}` não sobrescreve ajustes feitos pela tela.
+    if (ec.modality === 'MOTOCROSS') {
+      await prisma.raceConfigVersion.upsert({
+        where: { eventCategoryId_version: { eventCategoryId: ec.id, version: 1 } },
+        create: { eventCategoryId: ec.id, version: 1, config: structuredClone(MOTOCROSS_TEMPLATE) as unknown as object },
+        update: {},
+      });
+    }
   }
 
   for (const heat of STAGE_2_HEATS) {

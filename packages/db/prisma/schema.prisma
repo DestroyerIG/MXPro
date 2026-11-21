@@ -28,18 +28,19 @@ enum PublicNameDisplay {
 }
 
 model User {
-  id           String    @id @default(uuid(7)) @db.Uuid
+  id                 String              @id @default(uuid(7)) @db.Uuid
   /// Sempre gravado em minúsculas (normalizado pela API).
-  email        String    @unique
-  name         String
+  email              String              @unique
+  name               String
   /// Hash argon2id. A senha em texto nunca é armazenada.
-  passwordHash String    @map("password_hash")
-  role         Role
+  passwordHash       String              @map("password_hash")
+  role               Role
   /// Usuário desativado não consegue logar e perde as sessões abertas.
-  active       Boolean   @default(true)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  sessions     Session[]
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions           Session[]
+  raceConfigVersions RaceConfigVersion[]
 
   @@map("users")
 }
@@ -174,19 +175,20 @@ model Category {
 
 /// Categoria disputada num evento: modalidade, valor da inscrição e vagas.
 model EventCategory {
-  id            String         @id @default(uuid(7)) @db.Uuid
-  eventId       String         @map("event_id") @db.Uuid
-  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  categoryId    String         @map("category_id") @db.Uuid
-  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  id            String              @id @default(uuid(7)) @db.Uuid
+  eventId       String              @map("event_id") @db.Uuid
+  event         Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  categoryId    String              @map("category_id") @db.Uuid
+  category      Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   modality      Modality
   /// Valor da inscrição em CENTAVOS (dinheiro nunca em float).
-  entryFeeCents Int            @map("entry_fee_cents")
+  entryFeeCents Int                 @map("entry_fee_cents")
   /// Limite de inscritos. Nulo = sem limite.
-  maxEntries    Int?           @map("max_entries")
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  maxEntries    Int?                @map("max_entries")
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
   heats         HeatCategory[]
+  raceConfigs   RaceConfigVersion[]
 
   @@unique([eventId, categoryId])
   /// Alvo da FK composta de HeatCategory (garante categoria e bateria do mesmo evento).
@@ -225,4 +227,28 @@ model HeatCategory {
   @@id([heatId, eventCategoryId])
   @@index([eventCategoryId])
   @@map("heat_categories")
+}
+
+// ─── Fase 3: regras da prova ────────────────────────────────────────────────────────────────
+
+/// Configuração da prova de uma categoria do evento (JSON versionado do motor de regras).
+/// Antes da largada, salvar atualiza a versão atual. Depois que alguma bateria da categoria começa,
+/// a configuração fica CONGELADA: mudar exige motivo e cria uma nova versão (a anterior fica guardada).
+model RaceConfigVersion {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  eventCategoryId String        @map("event_category_id") @db.Uuid
+  eventCategory   EventCategory @relation(fields: [eventCategoryId], references: [id], onDelete: Cascade)
+  /// 1, 2, 3… por categoria do evento.
+  version         Int
+  /// Configuração validada pelo motor de regras (`schemaVersion` dentro do próprio JSON).
+  config          Json
+  /// Obrigatório nas versões criadas depois da largada (auditoria).
+  reason          String?
+  createdById     String?       @map("created_by_id") @db.Uuid
+  createdBy       User?         @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([eventCategoryId, version])
+  @@map("race_config_versions")
 }
