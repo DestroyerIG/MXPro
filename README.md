@@ -173,20 +173,29 @@ Requer **Docker** em execução. O Postgres sobe na porta **5433** (para não co
 cp .env.example .env   # ajuste se necessário; o .env nunca é versionado
 pnpm db:up             # sobe o PostgreSQL 18 (docker compose)
 pnpm db:migrate        # aplica as migrations
-pnpm db:seed           # dados fictícios: usuários, marca, campeonato, etapas, categorias e baterias
+pnpm db:seed           # dados fictícios: usuários, marca, campeonato, etapas, categorias, baterias e inscrições
 pnpm db:studio         # (opcional) navegador visual do banco
 ```
 
 Usuários do seed: `organizador@mxpro.test`, `secretaria@mxpro.test`, `cronometrista@mxpro.test` e
 `piloto@mxpro.test`, todos com a senha `SEED_PASSWORD` do `.env`. O seed também cria a "Copa Verão de
-Motocross" 2027: a Etapa 2 publicada, com 6 categorias e 6 baterias, e a Etapa 3 em rascunho. É idempotente
-e se recusa a rodar com `NODE_ENV=production`.
+Motocross" 2027: a Etapa 2 publicada, com 6 categorias, 6 baterias e os 8 inscritos da página 5 do escopo
+(pagos e pendentes, vistoria aprovada e pendente), e a Etapa 3 em rascunho. Os pilotos fictícios entram com
+`<nome.sobrenome>@mxpro.test` e a mesma senha. É idempotente e se recusa a rodar com `NODE_ENV=production`.
 
 **Modelo de eventos:** campeonato → evento (etapa ou avulso, de um ou mais dias) → categorias do evento
 (modalidade, valor em centavos e vagas, a partir de um catálogo único de categorias) → baterias, que podem
 juntar mais de uma categoria. Regras críticas também são garantidas pelo próprio banco (`CHECK` e chaves
 compostas): datas e janela de inscrição coerentes, valores não negativos, categoria sem duplicata e bateria
 ligada só a categorias do mesmo evento.
+
+**Modelo de inscrições** ([ADR 0004](docs/decisions/0004-inscricoes-e-pix.md)): inscrição (piloto × categoria
+do evento) → cobranças Pix, mais o registro dos consentimentos (LGPD). O banco garante:
+- nº de largada único por categoria entre as inscrições ativas, com "05" e "5" como números diferentes;
+- uma inscrição ativa por piloto em cada categoria;
+- prazo de reserva da vaga enquanto o Pix não é pago;
+- uma cobrança em aberto por inscrição;
+- webhook do gateway gravado uma única vez.
 
 ### Scripts
 
@@ -324,7 +333,9 @@ pnpm build
 - [x] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • ~~resultado da bateria (tempo + voltas,
       volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • ~~tela de regras~~ ✓.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
-- [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
+- [ ] **Inscrição + Pix:** ~~modelo de dados~~ ✓ • gateway Pix (falso) e webhook • API de inscrição • formulário
+      público e pagamento • lista de inscritos, check-in e vistoria • grid.
+      Regras decididas no [ADR 0004](docs/decisions/0004-inscricoes-e-pix.md)
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
 - [ ] **Resultados ao vivo:** WebSocket, página pública para celular, resultado oficial em PDF e planilha
 - [ ] **Campeonato e área do piloto:** pontuação por etapa, descarte, perfil e histórico
