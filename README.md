@@ -102,6 +102,11 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 - **Recebimento pelo Mercado Pago:** na tela Financeiro, o organizador conecta a conta do Mercado Pago do contratante
   (OAuth com PKCE): o sistema nunca vê a senha, guarda os tokens criptografados e renova o acesso sozinho antes de
   vencer. Os Pix das inscrições serão gerados nessa conta.
+- **Inscrição pelo celular com Pix:** link público do evento com o formulário do escopo (nome, nº de largada,
+  categoria, moto, equipe e aceite do termo); a primeira inscrição cria a conta do piloto. Vaga e número ficam
+  reservados por 30 minutos; a tela de pagamento mostra o QR Code e o "copia e cola" e muda sozinha para
+  "Inscrição confirmada!". Textos do termo e da política de privacidade são **provisórios** até o contratante enviar
+  os oficiais.
 - **Login por perfil:** cada perfil cai na sua área; sessão em cookie httpOnly; a cronometragem abre offline.
 - **Cronometragem para tablet** (dados fictícios até a fase 5):
   - um toque no cartão registra uma passagem;
@@ -238,6 +243,8 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 | `/painel/categorias` | Catálogo de categorias: criar, renomear, desativar e excluir as nunca usadas | Organizador (secretaria vê sem editar) |
 | `/painel/financeiro` | Conta do Mercado Pago que recebe as inscrições: conectar (OAuth), ver a conta e desconectar | Organizador |
 | `/painel/<área>` | Inscrições, Cronometragem, Resultados, Campeonato, Equipe | Organizador / secretaria |
+| `/inscricao/:eventId` | Inscrição pelo celular (link do evento): cria a conta do piloto na primeira vez, escolhe categoria, nº de largada, moto e equipe, e segue para o Pix | Público (sem login) |
+| `/minhas-inscricoes` · `/minhas-inscricoes/:id` | Inscrições do piloto e o pagamento: QR Code, "Copiar código Pix" e "Aguardando pagamento…" que muda sozinho para "Inscrição confirmada!" | Piloto |
 | `/cronometragem` | Tela de pista para tablet/celular | Cronometrista / organizador |
 | `/ao-vivo/telao` | Classificação ao vivo em modo telão | Público (sem login) |
 | `/componentes` | Catálogo do design system | Desenvolvimento |
@@ -357,7 +364,7 @@ pnpm build
       volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • ~~tela de regras~~ ✓.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
 - [ ] **Inscrição + Pix (Mercado Pago):** ~~modelo de dados~~ ✓ • ~~conexão da conta (OAuth)~~ ✓ • ~~cobrança Pix e
-      webhook~~ ✓ • ~~API de inscrição~~ ✓ • formulário público e pagamento • lista de inscritos, check-in e vistoria • grid.
+      webhook~~ ✓ • ~~API de inscrição~~ ✓ • ~~formulário público e pagamento~~ ✓ • lista de inscritos, check-in e vistoria • grid.
       Regras decididas nos ADRs [0004](docs/decisions/0004-inscricoes-e-pix.md) e [0005](docs/decisions/0005-mercado-pago-oauth.md)
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
 - [ ] **Resultados ao vivo:** WebSocket, página pública para celular, resultado oficial em PDF e planilha
