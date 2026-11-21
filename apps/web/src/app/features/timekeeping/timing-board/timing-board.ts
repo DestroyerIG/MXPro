@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, computed, inject, isDevMode, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, DestroyRef, computed, inject, isDevMode, signal, viewChild } from '@angular/core';
+import { SessionService } from '../../../core/auth/session.service';
 import { ConnectivityService } from '../../../core/connectivity/connectivity.service';
 import { formatCountdown, formatPenalty, msToDisplay } from '../../../shared/format/race-time';
 import { Button } from '../../../shared/ui/button/button';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { StatusBadge } from '../../../shared/ui/status-badge/status-badge';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { PilotCard, type TapMode } from '../pilot-card/pilot-card';
@@ -26,7 +28,7 @@ const SUSPECT_HIGHLIGHT_MS = 5_000;
  */
 @Component({
   selector: 'app-timing-board',
-  imports: [Button, StatusBadge, PilotCard],
+  imports: [Button, StatusBadge, PilotCard, ConfirmDialog],
   templateUrl: './timing-board.html',
   // providers no componente: estas instâncias pertencem a ESTA tela e somem com ela.
   providers: [TimingSession, TimingOutbox],
@@ -38,6 +40,8 @@ export class TimingBoard {
   protected readonly outbox = inject(TimingOutbox);
   private readonly connectivity = inject(ConnectivityService);
   private readonly toasts = inject(ToastService);
+  private readonly auth = inject(SessionService);
+  private readonly logoutDialog = viewChild.required<ConfirmDialog>('logoutDialog');
 
   protected readonly isDev = isDevMode();
   protected readonly simulateOffline = this.connectivity.simulateOffline;
@@ -160,5 +164,18 @@ export class TimingBoard {
       default:
         return 'última ação';
     }
+  }
+
+  /**
+   * Sair (trocar de usuário no aparelho). Com lançamentos ainda não enviados, pede confirmação:
+   * até a fase 5 a fila fica só na memória e se perderia ao sair.
+   */
+  protected requestLogout(): void {
+    if (this.outbox.pendingCount() > 0) this.logoutDialog().open();
+    else void this.auth.logout();
+  }
+
+  protected logout(): void {
+    void this.auth.logout();
   }
 }

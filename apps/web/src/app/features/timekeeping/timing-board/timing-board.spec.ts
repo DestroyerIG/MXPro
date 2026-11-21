@@ -1,10 +1,27 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
+import { provideTestHttp, signInAs } from '../../../core/auth/session.testing';
+import { LOGOUT_URL, SessionService } from '../../../core/auth/session.service';
 import { ConnectivityService } from '../../../core/connectivity/connectivity.service';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { TimingBoard } from './timing-board';
 
 describe('TimingBoard (tela de pista)', () => {
+  beforeAll(() => {
+    // jsdom não implementa o <dialog> modal; basta abrir/fechar para testar a confirmação.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+      this.open = false;
+    };
+  });
+
   async function setup() {
+    // A tela tem o botão Sair: precisa do HttpClient (falso) e do roteador.
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'entrar', children: [] }]), provideTestHttp()] });
+    await signInAs('TIMEKEEPER');
     const fixture = TestBed.createComponent(TimingBoard);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
@@ -132,5 +149,43 @@ describe('TimingBoard (tela de pista)', () => {
       },
       { timeout: 5000, interval: 200 },
     );
+  });
+
+  describe('Sair', () => {
+    const sair = (el: HTMLElement) =>
+      Array.from(el.querySelectorAll<HTMLButtonElement>('header button')).find((b) => b.textContent?.trim() === 'Sair')!;
+
+    it('com lançamentos pendentes, pede confirmação antes de sair', async () => {
+      const { el, stable } = await setup();
+      sair(el).click();
+      await stable();
+      const dialog = el.querySelector('dialog')!;
+      expect(dialog.open).toBe(true);
+      expect(dialog.textContent).toContain('14 lançamentos ainda não chegaram ao servidor');
+      TestBed.inject(HttpTestingController).expectNone(LOGOUT_URL);
+
+      Array.from(dialog.querySelectorAll('button')).find((b) => b.textContent?.includes('Sair mesmo assim'))!.click();
+      await stable();
+      TestBed.inject(HttpTestingController).expectOne(LOGOUT_URL).flush(null);
+      await vi.waitFor(() => expect(TestBed.inject(SessionService).user()).toBeNull());
+    });
+
+    it('com tudo enviado, sai direto e volta para o login', async () => {
+      const { el, stable, statusText } = await setup();
+      TestBed.inject(ConnectivityService).simulateOffline.set(false);
+      await vi.waitFor(
+        async () => {
+          await stable();
+          expect(statusText()).toContain('ONLINE - tudo enviado');
+        },
+        { timeout: 5000, interval: 200 },
+      );
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
+      sair(el).click();
+      await stable();
+      expect(el.querySelector('dialog')!.open).toBe(false);
+      TestBed.inject(HttpTestingController).expectOne(LOGOUT_URL).flush(null);
+      await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/entrar'));
+    });
   });
 });

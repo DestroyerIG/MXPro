@@ -4,6 +4,7 @@
     <div class="min-w-0">
       <h1 class="text-xl font-bold">{{ heatTitle() }}</h1>
       <p class="text-sm text-on-chrome-muted">Cronometrista: {{ session.heat().timekeeperName }}</p>
+      <button uiButton type="button" variant="secondary" size="sm" class="mt-2" (click)="requestLogout()">Sair</button>
     </div>
 
     <div class="flex items-center gap-3" role="timer" aria-label="Relógio da bateria">
@@ -106,3 +107,11 @@
   </footer>
 
 </div>
+
+<ui-confirm-dialog #logoutDialog heading="Sair com lançamentos não enviados?" confirmLabel="Sair mesmo assim" (confirmed)="logout()">
+  <p>
+    {{ outbox.pendingCount() }} lançamento{{ outbox.pendingCount() === 1 ? '' : 's' }} ainda não
+    {{ outbox.pendingCount() === 1 ? 'chegou' : 'chegaram' }} ao servidor e pode{{ outbox.pendingCount() === 1 ? '' : 'm' }}
+    se perder. Se der, espere a conexão voltar e a fila esvaziar antes de sair.
+  </p>
+</ui-confirm-dialog>
