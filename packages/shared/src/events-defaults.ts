@@ -84,3 +84,57 @@ export function isRegistrationOpen(
   if (now < event.registrationOpensAt) return false;
   return !event.registrationClosesAt || now < event.registrationClosesAt;
 }
+
+// ─── Categorias e baterias ────────────────────────────────────────────────────────────────
+
+export const HEAT_STATUSES = ['SCHEDULED', 'IN_PROGRESS', 'FINISHED', 'CANCELED'] as const;
+export type HeatStatus = (typeof HEAT_STATUSES)[number];
+export const HEAT_STATUS_LABELS: Record<HeatStatus, string> = {
+  SCHEDULED: 'Programada',
+  IN_PROGRESS: 'Em prova',
+  FINISHED: 'Encerrada',
+  CANCELED: 'Cancelada',
+};
+
+/** Categoria do catálogo (MX1, MX2…). */
+export interface CategoryDto {
+  id: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  /** Em quantos eventos ela é disputada (categoria em uso não é excluída, é desativada). */
+  eventCount: number;
+}
+
+/** Categoria disputada num evento. */
+export interface EventCategoryDto {
+  id: string;
+  eventId: string;
+  category: { id: string; name: string };
+  modality: Modality;
+  /** Valor da inscrição em centavos. */
+  entryFeeCents: number;
+  /** Limite de inscritos; null = sem limite. */
+  maxEntries: number | null;
+  heatCount: number;
+}
+
+export interface HeatDto {
+  id: string;
+  eventId: string;
+  name: string;
+  /** ISO 8601 (UTC) ou null (horário a definir). */
+  scheduledAt: string | null;
+  status: HeatStatus;
+  /** Categorias que largam nesta bateria (uma ou mais). */
+  categories: { eventCategoryId: string; categoryId: string; name: string }[];
+}
+
+/**
+ * Dia do calendário ("AAAA-MM-DD") de um instante, no fuso do evento.
+ * Ex.: 2027-03-14T01:00Z em São Paulo ainda é 13/03 (22:00).
+ */
+export function calendarDateIn(instant: Date, timeZone: string): string {
+  // en-CA formata como AAAA-MM-DD.
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(instant);
+}
