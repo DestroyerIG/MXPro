@@ -38,7 +38,7 @@ Permissões são checadas **no backend** em toda rota; esconder botão no front 
 6. **Tempo em milissegundos inteiros** (`int`), nunca `float`. Dinheiro em **centavos inteiros**. Formatação só na camada de apresentação.
 7. **Identidade visual do contratante** (logo, cores, domínio) é configurável e aplicada em telas públicas, telão e PDFs — nada de cores/logos hardcoded nesses pontos.
 8. **LGPD**: coletar o mínimo de dados do piloto, consentimento explícito (termo de responsabilidade + política de privacidade), possibilidade de exportar/anonimizar dados de um piloto.
-9. **Simplicidade antes de generalidade.** É single-tenant: não criar abstração multi-organizador. Mas **gateway de pagamento** e **leitor de transponder** ficam atrás de interfaces (ainda não definidos).
+9. **Simplicidade antes de generalidade.** É single-tenant: não criar abstração multi-organizador. Mas **gateway de pagamento** (Mercado Pago, ADR 0005) e **leitor de transponder** (ainda não definido) ficam atrás de interfaces.
 
 ---
 
@@ -166,7 +166,7 @@ Permissões são checadas **no backend** em toda rota; esconder botão no front 
 - Página pública e telão: somente leitura, sem autenticação, **leves** (pouco JS, reconexão automática, fallback para polling).
 
 ### 5.5 Pagamentos (Pix)
-- Interface `PaymentGateway` com `createPixCharge`, `getCharge`, `handleWebhook` — **gateway ainda não definido** (Pix e cartão). Começar com implementação fake/sandbox atrás da interface.
+- Gateway definido: **Mercado Pago**, na conta do contratante conectada por **OAuth** (PKCE) na tela Financeiro; tokens criptografados no banco e renovados antes de vencer (ADR 0005). Pix pela API de Orders. Cobrança e webhook ficam atrás de interfaces; os testes usam uma versão simulada da API (sem gateway falso em produção).
 - Webhook: validar assinatura/token, ser **idempotente**, nunca confiar no front para marcar "pago".
 - Inscrição só vira `CONFIRMED` via confirmação do webhook (ou baixa manual da secretaria/organizador, auditada).
 - Tratar: Pix expirado, pagamento duplicado, estorno/reembolso, conciliação no módulo Financeiro.
@@ -207,7 +207,7 @@ Entregar em fatias verticais que já funcionem ponta a ponta; **não** construir
 1. **Fundação:** monorepo, CI, Postgres + Prisma, auth + RBAC, seeds, app Angular com layout base do painel (rotas lazy, interceptor de auth, guards) e branding configurável.
 2. **Eventos e categorias:** CRUD de campeonato/evento/categoria/bateria, dashboard básico.
 3. **Motor de regras (MVP Motocross)** + testes: baterias, grid, tempo + voltas, volta mínima, penalidade em tempo, tabela de pontos, desempate. *Esta fase é o coração — não pular testes.*
-4. **Inscrição + Pix (gateway fake → real):** formulário público, pagamento, confirmação por webhook, lista de inscritos, check-in e vistoria, nº de largada e grid.
+4. **Inscrição + Pix (Mercado Pago):** formulário público, pagamento, confirmação por webhook, lista de inscritos, check-in e vistoria, nº de largada e grid.
 5. **Cronometragem PWA offline:** cartões por piloto, fila IndexedDB, sync idempotente, desfazer/penalidade/desclassificar/bandeirada, auditoria de correções.
 6. **Resultados ao vivo:** WebSocket, página pública mobile, modo telão com patrocinadores, fechamento e **resultado oficial (PDF + planilha)**.
 7. **Campeonato e área do piloto:** pontuação por etapa, descarte, perfil e histórico.
@@ -225,7 +225,7 @@ Entregar em fatias verticais que já funcionem ponta a ponta; **não** construir
 ## 9. Pontos em aberto com o contratante (não presumir — perguntar ou isolar atrás de configuração/interface)
 - Regras exatas de cada modalidade e categorias do calendário.
 - Equipamento de cronometragem (define o tipo de integração).
-- Identidade visual, domínio e **gateway de pagamento**.
+- Identidade visual e domínio. (Gateway de pagamento: definido, Mercado Pago — ADR 0005.)
 
 > As telas do escopo são **ilustrações de conceito**; o layout final será validado com o contratante. Siga a estrutura e o comportamento descritos aqui, mas não trate pixels dos protótipos como requisito.
 

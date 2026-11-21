@@ -63,11 +63,12 @@ a regra funcionar.
 
 ## Fica para os próximos passos
 
-- **Passo 6.2:** interface `PaymentGateway` (`createPixCharge`, `getCharge`, `handleWebhook`) com uma
-  implementação **falsa**, até o contratante escolher o gateway.
+- **Gateway:** definido depois deste ADR: **Mercado Pago**, na conta do contratante conectada por OAuth (ver
+  [ADR 0005](0005-mercado-pago-oauth.md)). Não haverá gateway falso em produção. Os testes automáticos usam uma
+  versão simulada da API do Mercado Pago, sem rede.
 - **Pagamento depois do vencimento:** quando o Pix é pago depois de a reserva vencer, a inscrição é confirmada se
   ainda houver vaga e o número estiver livre. Se não houver, o caso vai para a secretaria, como "pago sem vaga",
-  para estorno ou exceção. Essa regra será detalhada no passo 6.2.
+  para estorno ou exceção. Essa regra será detalhada no passo da cobrança Pix.
 - **Dados do piloto:** por enquanto só os do escopo (nome, número, categoria, moto, equipe e aceite do termo).
   **CPF, telefone e data de nascimento** entram somente quando houver motivo concreto, como uma exigência do
   gateway, documento do seguro ou idade mínima de categoria. Até lá, ficam como ponto a confirmar com o contratante

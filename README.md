@@ -99,6 +99,9 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
   voltas, volta mínima 0:45.000, +10 s por infração), tabela de pontos editável e desempate. O motor de regras calcula
   resultado da bateria e geral do dia; depois da largada a configuração fica congelada e cada mudança vira uma nova
   versão com motivo.
+- **Recebimento pelo Mercado Pago:** na tela Financeiro, o organizador conecta a conta do Mercado Pago do contratante
+  (OAuth com PKCE): o sistema nunca vê a senha, guarda os tokens criptografados e renova o acesso sozinho antes de
+  vencer. Os Pix das inscrições serão gerados nessa conta.
 - **Login por perfil:** cada perfil cai na sua área; sessão em cookie httpOnly; a cronometragem abre offline.
 - **Cronometragem para tablet** (dados fictícios até a fase 5):
   - um toque no cartão registra uma passagem;
@@ -197,6 +200,14 @@ do evento) → cobranças Pix, mais o registro dos consentimentos (LGPD). O banc
 - uma cobrança em aberto por inscrição;
 - webhook do gateway gravado uma única vez.
 
+**Mercado Pago** ([ADR 0005](docs/decisions/0005-mercado-pago-oauth.md)): para conectar uma conta em desenvolvimento,
+é preciso um aplicativo no Mercado Pago ("Suas integrações"):
+1. cadastre nele a URL de retorno, igual a `MP_REDIRECT_URI`;
+2. habilite o PKCE;
+3. preencha as variáveis `MP_*` e `PAYMENT_TOKEN_KEY` no `.env` (veja o `.env.example`).
+
+Sem elas, a tela Financeiro explica o que falta e o resto do sistema funciona normalmente.
+
 ### Scripts
 
 | Comando (na raiz) | O que faz |
@@ -224,7 +235,8 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 | `/painel/eventos/:id?aba=categorias` · `?aba=baterias` | Categorias do evento (modalidade, valor em reais, vagas) e programação de baterias (uma ou mais categorias, horário no fuso do evento) | Organizador (secretaria vê sem editar) |
 | `/painel/eventos/:id/categorias/:eventCategoryId/regras` | Regras da prova da categoria: modelo pronto, largada, término, duração, baterias, volta mínima, penalidade, % mínimo para classificar, tabela de pontos e desempate. Depois da largada, mudar exige motivo e cria nova versão | Organizador (secretaria vê sem editar) |
 | `/painel/categorias` | Catálogo de categorias: criar, renomear, desativar e excluir as nunca usadas | Organizador (secretaria vê sem editar) |
-| `/painel/<área>` | Inscrições, Cronometragem, Resultados, Campeonato, Financeiro, Equipe | Organizador / secretaria |
+| `/painel/financeiro` | Conta do Mercado Pago que recebe as inscrições: conectar (OAuth), ver a conta e desconectar | Organizador |
+| `/painel/<área>` | Inscrições, Cronometragem, Resultados, Campeonato, Equipe | Organizador / secretaria |
 | `/cronometragem` | Tela de pista para tablet/celular | Cronometrista / organizador |
 | `/ao-vivo/telao` | Classificação ao vivo em modo telão | Público (sem login) |
 | `/componentes` | Catálogo do design system | Desenvolvimento |
@@ -256,12 +268,17 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `GET`/`POST /api/events/:id/categories` · `PATCH`/`DELETE …/:eventCategoryId` | Categorias do evento: modalidade, valor em centavos e vagas. Não sai do evento se estiver em bateria ou for a última de um evento publicado |
 | `GET`/`PUT /api/events/:id/categories/:eventCategoryId/rules` | Regras da prova da categoria (configuração versionada do motor). Sem nada salvo, devolve o modelo pronto. Depois da largada fica congelada: mudar exige motivo e cria nova versão — alteração: **somente organizador** |
 | `GET`/`POST /api/events/:id/heats` · `PATCH`/`DELETE …/:heatId` | Baterias com uma ou mais categorias e horário dentro das datas do evento (no fuso dele). Só bateria programada é alterada |
+| `GET`/`DELETE /api/payments/mercadopago` | Conta do Mercado Pago conectada (sem tokens) / desconectar — **somente organizador** |
+| `POST /api/payments/mercadopago/connect` | Inicia a conexão OAuth: devolve a URL de autorização do Mercado Pago — **somente organizador** |
+| `GET /api/payments/mercadopago/callback` | Retorno do Mercado Pago (navegação do navegador): confere o `state`, troca o código pelos tokens e volta para `/painel/financeiro?mercadopago=<resultado>` |
 
 Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
 contra CSRF. Detalhes e motivos em [`docs/decisions/0002`](docs/decisions/0002-autenticacao-por-sessao-em-cookie.md).
 
 Em desenvolvimento o `ng serve` encaminha `/api` para a API (`apps/web/proxy.conf.json`): front e API ficam na
-mesma origem, como em produção.
+mesma origem, como em produção. Os pacotes do workspace (`@mxpro/shared`, `@mxpro/rules-engine`) ficam fora do
+pré-empacotamento do Vite (`prebundle.exclude` no `angular.json`): mudanças neles entram no `ng serve` sem
+reiniciar.
 
 Todo erro da API segue o formato `{ code, message, details? }`, com mensagens em português.
 
@@ -333,9 +350,9 @@ pnpm build
 - [x] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • ~~resultado da bateria (tempo + voltas,
       volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • ~~tela de regras~~ ✓.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
-- [ ] **Inscrição + Pix:** ~~modelo de dados~~ ✓ • gateway Pix (falso) e webhook • API de inscrição • formulário
-      público e pagamento • lista de inscritos, check-in e vistoria • grid.
-      Regras decididas no [ADR 0004](docs/decisions/0004-inscricoes-e-pix.md)
+- [ ] **Inscrição + Pix (Mercado Pago):** ~~modelo de dados~~ ✓ • ~~conexão da conta (OAuth)~~ ✓ • cobrança Pix e
+      webhook • API de inscrição • formulário público e pagamento • lista de inscritos, check-in e vistoria • grid.
+      Regras decididas nos ADRs [0004](docs/decisions/0004-inscricoes-e-pix.md) e [0005](docs/decisions/0005-mercado-pago-oauth.md)
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
 - [ ] **Resultados ao vivo:** WebSocket, página pública para celular, resultado oficial em PDF e planilha
 - [ ] **Campeonato e área do piloto:** pontuação por etapa, descarte, perfil e histórico
