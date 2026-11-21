@@ -10,7 +10,7 @@
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
+    "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
@@ -20,6 +20,14 @@
     "db:studio": "pnpm --filter @mxpro/db studio",
     "postinstall": "pnpm --filter @mxpro/db generate",
     "dev:api": "pnpm --filter @mxpro/api dev",
-    "dev:web": "pnpm --filter web dev"
+    "dev:web": "pnpm --filter web dev",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "~10.0.1",
+    "angular-eslint": "~22.6.0",
+    "eslint": "~10.14.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "~8.72.2"
   }
 }
