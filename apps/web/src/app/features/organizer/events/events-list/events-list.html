@@ -18,7 +18,7 @@
               <a [routerLink]="row.event.id" class="font-bold text-brand-text underline-offset-2 hover:underline">{{ row.event.name }}</a>
               <p class="text-xs text-ink-2">{{ row.stage ?? 'Evento avulso' }}</p>
               <p class="mt-2 text-sm">{{ row.period }} • {{ row.event.venue }}, {{ row.event.city }}/{{ row.event.state }}</p>
-              <p class="text-sm text-ink-2">{{ row.event.categoryCount }} categorias • {{ row.event.heatCount }} baterias</p>
+              <p class="text-sm text-ink-2">{{ row.counts }}</p>
               <div class="mt-2 flex flex-wrap gap-1">
                 <ui-status-badge [tone]="row.status.tone">{{ row.status.label }}</ui-status-badge>
                 @if (row.registration; as reg) {

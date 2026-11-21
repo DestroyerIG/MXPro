@@ -19,6 +19,11 @@ export default [
       { path: 'cronometragem', component: TimingHub, title: 'Cronometragem | MXPro' },
       // Telas de eventos: loadComponent baixa cada uma só quando é aberta (o formulário é o maior pedaço).
       {
+        path: 'categorias',
+        loadComponent: () => import('./categories/categories-page').then((m) => m.CategoriesPage),
+        title: 'Categorias | MXPro',
+      },
+      {
         path: 'eventos',
         loadComponent: () => import('./events/events-list/events-list').then((m) => m.EventsList),
         title: 'Eventos | MXPro',
@@ -33,7 +38,7 @@ export default [
         loadComponent: () => import('./events/event-form/event-form').then((m) => m.EventForm),
         title: 'Evento | MXPro',
       },
-      ...ORGANIZER_NAV.filter((item) => !['', 'cronometragem', 'eventos'].includes(item.path)).map((item) => ({
+      ...ORGANIZER_NAV.filter((item) => !['', 'cronometragem', 'eventos', 'categorias'].includes(item.path)).map((item) => ({
         path: item.path,
         component: ComingSoon,
         title: `${item.label} | MXPro`,

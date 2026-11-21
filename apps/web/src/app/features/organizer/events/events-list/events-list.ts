@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { EVENT_STATUSES, type EventDto, type EventStatus } from '@mxpro/shared';
 import { SessionService } from '../../../../core/auth/session.service';
 import { formatDateRange } from '../../../../shared/format/date-time';
+import { plural } from '../../../../shared/format/plural';
 import { Button } from '../../../../shared/ui/button/button';
 import { StatusBadge } from '../../../../shared/ui/status-badge/status-badge';
 import { Table } from '../../../../shared/ui/table/table';
@@ -20,6 +21,7 @@ interface EventRow {
   stage: string | null;
   status: (typeof EVENT_STATUS)[EventStatus];
   registration: ReturnType<typeof registrationBadge>;
+  counts: string;
 }
 
 /**
@@ -54,6 +56,7 @@ export class EventsList {
         : null,
       status: EVENT_STATUS[event.status],
       registration: registrationBadge(event),
+      counts: `${plural(event.categoryCount, 'categoria', 'categorias')} • ${plural(event.heatCount, 'bateria', 'baterias')}`,
     })),
   );
 

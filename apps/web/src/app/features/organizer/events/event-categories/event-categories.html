@@ -1,0 +1,104 @@
+@if (error(); as message) {
+  <p role="alert" class="mb-4 rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+}
+
+@if (editable()) {
+  <form novalidate class="mb-4 rounded-lg border border-line bg-surface p-4" (submit)="onSubmit($event)">
+    <h2 class="mb-3 text-base font-bold">{{ editingId() ? 'Editar ' + editingName() : 'Adicionar categoria' }}</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_8rem_8rem]">
+      @if (!editingId()) {
+        <ui-form-field label="Categoria" required [error]="fieldError('categoryId')">
+          <select uiControl [formField]="categoryForm.categoryId">
+            <option value="">Escolha…</option>
+            @for (c of available(); track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </ui-form-field>
+      }
+      <ui-form-field label="Modalidade" required>
+        <select uiControl [formField]="categoryForm.modality">
+          @for (m of modalities; track m.id) {
+            <option [value]="m.id">{{ m.label }}</option>
+          }
+        </select>
+      </ui-form-field>
+      <ui-form-field label="Valor (R$)" required [error]="fieldError('fee')">
+        <input uiControl type="text" inputmode="decimal" placeholder="150,00" [formField]="categoryForm.fee" />
+      </ui-form-field>
+      <ui-form-field label="Vagas" hint="Em branco: sem limite." [error]="fieldError('maxEntries')">
+        <input uiControl type="text" inputmode="numeric" [formField]="categoryForm.maxEntries" />
+      </ui-form-field>
+    </div>
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <button uiButton type="submit" [disabled]="busy()">{{ editingId() ? 'Salvar categoria' : 'Adicionar categoria' }}</button>
+      @if (editingId()) {
+        <button uiButton type="button" variant="secondary" (click)="cancelEdit()">Cancelar edição</button>
+      }
+      @if (!editingId() && catalog.hasValue() && !available().length) {
+        <p class="text-sm text-ink-2">
+          Todas as categorias do catálogo já estão no evento.
+          <a routerLink="/painel/categorias" class="font-bold text-brand-text underline">Cadastrar categoria</a>
+        </p>
+      }
+    </div>
+  </form>
+}
+
+@if (list.hasValue()) {
+  @if (rows().length) {
+    <div class="overflow-x-auto rounded-md">
+      <table uiTable>
+        <thead>
+          <tr>
+            <th scope="col">Categoria</th>
+            <th scope="col">Modalidade</th>
+            <th scope="col" class="num">Valor</th>
+            <th scope="col" class="num">Vagas</th>
+            <th scope="col" class="num">Baterias</th>
+            @if (editable()) {
+              <th scope="col"><span class="sr-only">Ações</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr [class.outline-2]="row.id === editingId()" [class.outline-brand]="row.id === editingId()">
+              <td class="font-bold">{{ row.category.name }}</td>
+              <td>{{ row.modalityLabel }}</td>
+              <td class="num whitespace-nowrap">{{ row.fee }}</td>
+              <td class="num whitespace-nowrap">{{ row.slots }}</td>
+              <td class="num">{{ row.heatCount }}</td>
+              @if (editable()) {
+                <td>
+                  <span class="flex justify-end gap-2">
+                    <button uiButton type="button" size="sm" variant="secondary" [attr.aria-label]="'Editar ' + row.category.name" (click)="edit(row)">
+                      Editar
+                    </button>
+                    <button uiButton type="button" size="sm" variant="danger" [attr.aria-label]="'Remover ' + row.category.name" [disabled]="busy()" (click)="remove(row)">
+                      Remover
+                    </button>
+                  </span>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-ink-2">
+      Nenhuma categoria no evento ainda.
+      @if (editable()) {
+        Adicione as categorias que vão correr (ex.: MX1, MX2, Feminino) com o valor da inscrição.
+      }
+    </p>
+  }
+} @else if (list.error()) {
+  <div role="alert" class="rounded-lg border-2 border-danger bg-surface p-6">
+    <p class="font-bold">Não foi possível carregar as categorias do evento.</p>
+    <button uiButton class="mt-4" (click)="list.reload()">Tentar de novo</button>
+  </div>
+} @else {
+  <div aria-busy="true" class="h-40 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando as categorias…</span></div>
+}

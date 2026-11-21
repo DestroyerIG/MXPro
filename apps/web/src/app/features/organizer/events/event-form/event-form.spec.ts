@@ -1,5 +1,6 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { EventDto, Role } from '@mxpro/shared';
@@ -210,6 +211,47 @@ describe('EventForm (/painel/eventos/novo e /painel/eventos/:id)', () => {
       TestBed.resetTestingModule();
       const published = await open(`/painel/eventos/${eventDto().id}`, { event: eventDto() });
       expect(actions(published.root)).toEqual(['Encerrar inscrições agora', 'Cancelar evento']);
+    });
+  });
+
+  describe('abas', () => {
+    it('abas com contagens; trocar de aba põe a aba na URL (?aba=) e mostra o conteúdo dela', async () => {
+      const { root, harness, stable } = await open(`/painel/eventos/${eventDto().id}`, { event: eventDto() });
+      const tabs = () => Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+      expect(tabs().map((t) => t.textContent?.trim())).toEqual(['Dados do evento', 'Categorias (6)', 'Baterias (6)']);
+      expect(tabs()[0].getAttribute('aria-selected')).toBe('true');
+
+      tabs()[1].click();
+      await settle();
+      expect(TestBed.inject(Router).url).toBe(`/painel/eventos/${eventDto().id}?aba=categorias`);
+      // O painel da aba vem por @defer (placeholder mínimo de 200 ms); quando aparece, busca as listas.
+      await vi.waitFor(() => {
+        TestBed.tick();
+        expect(http.match(() => true).map((r) => (r.flush({ categories: [] }), r)).length).toBeGreaterThan(0);
+      }, { timeout: 3000, interval: 50 });
+      await stable();
+      const page = harness.routeNativeElement!;
+      expect(page.querySelector('app-event-categories')).not.toBeNull();
+      expect(page.querySelector<HTMLFormElement>('[role="tabpanel"] > form')?.hidden).toBe(true);
+      expect(page.querySelector('[role="tabpanel"]')?.getAttribute('aria-labelledby')).toBe(tabs()[1].id);
+    });
+
+    it('mudança numa aba (categorias) atualiza as contagens SEM apagar o que foi digitado em "Dados"', async () => {
+      const { type, control, root, harness, stable } = await open(`/painel/eventos/${eventDto().id}`, { event: eventDto() });
+      await type('Pista ou local', 'Nova pista ainda não salva');
+
+      // O mesmo que acontece quando a aba Categorias emite (changed): a página recarrega o evento.
+      // A rota no topo é o layout do painel; a página do evento é o componente <app-event-form> dentro dele.
+      const page = harness.fixture.debugElement.query(By.css('app-event-form')).componentInstance as { onChildChanged: () => void };
+      page.onChildChanged();
+      await settle();
+      TestBed.tick();
+      // Mesmo updatedAt (os dados do evento não mudaram), só as contagens.
+      http.expectOne(`${EVENTS_URL}/${eventDto().id}`).flush(eventDto({ categoryCount: 7 }));
+      await stable();
+
+      expect(root.textContent).toContain('7 categorias');
+      expect(control('Pista ou local').value).toBe('Nova pista ainda não salva');
     });
   });
 

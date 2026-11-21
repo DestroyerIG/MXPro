@@ -1,0 +1,110 @@
+@if (error(); as message) {
+  <p role="alert" class="mb-4 rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+}
+
+@if (editable()) {
+  <form novalidate class="mb-4 rounded-lg border border-line bg-surface p-4" (submit)="onSubmit($event)">
+    <h2 class="mb-3 text-base font-bold">{{ editingId() ? 'Editar bateria' : 'Adicionar bateria' }}</h2>
+
+    @if (categories.hasValue() && !categories.value().categories.length) {
+      <p class="text-sm text-ink-2">Adicione as categorias do evento (aba Categorias) antes de montar as baterias.</p>
+    } @else {
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_8rem]">
+        <ui-form-field label="Nome" required [error]="nameError()">
+          <input uiControl type="text" placeholder="Bateria 1" [formField]="heatForm.name" />
+        </ui-form-field>
+        <ui-form-field label="Dia">
+          <select uiControl [formField]="heatForm.day">
+            @for (d of days(); track d.day) {
+              <option [value]="d.day">{{ d.label }}</option>
+            }
+          </select>
+        </ui-form-field>
+        <ui-form-field label="Horário" hint="Em branco: a definir.">
+          <input uiControl type="time" [formField]="heatForm.time" />
+        </ui-form-field>
+      </div>
+
+      <!-- fieldset + legend: os leitores de tela anunciam "Categorias que largam" antes de cada caixa. -->
+      <fieldset class="mt-4" [attr.aria-describedby]="categoriesError() ? 'heat-categories-error' : null">
+        <legend class="mb-2 text-xs font-bold text-ink-2">Categorias que largam <span class="text-danger-text" aria-hidden="true">*</span></legend>
+        <div class="flex flex-wrap gap-2">
+          @for (c of categories.value()?.categories ?? []; track c.id) {
+            <label
+              class="flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm has-[:checked]:border-brand-strong has-[:checked]:bg-brand-soft has-[:checked]:font-bold"
+              [class.border-control]="!selected().has(c.id)"
+            >
+              <input type="checkbox" class="size-4 accent-[var(--brand-primary-strong)]" [checked]="selected().has(c.id)" (change)="toggle(c.id, $any($event.target).checked)" />
+              {{ c.category.name }}
+            </label>
+          }
+        </div>
+        @if (categoriesError(); as message) {
+          <p id="heat-categories-error" class="mt-1 text-xs font-bold text-danger-text">{{ message }}</p>
+        } @else {
+          <p class="mt-1 text-xs text-ink-2">Marque mais de uma para categorias que largam juntas (cada piloto é classificado na sua).</p>
+        }
+      </fieldset>
+
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button uiButton type="submit" [disabled]="busy()">{{ editingId() ? 'Salvar bateria' : 'Adicionar bateria' }}</button>
+        @if (editingId()) {
+          <button uiButton type="button" variant="secondary" (click)="cancelEdit()">Cancelar edição</button>
+        }
+      </div>
+    }
+  </form>
+}
+
+@if (heats.hasValue()) {
+  @if (rows().length) {
+    <div class="overflow-x-auto rounded-md">
+      <table uiTable>
+        <thead>
+          <tr>
+            <th scope="col">Horário</th>
+            <th scope="col">Bateria</th>
+            <th scope="col">Categorias</th>
+            <th scope="col">Status</th>
+            @if (editable()) {
+              <th scope="col"><span class="sr-only">Ações</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr>
+              <td class="whitespace-nowrap font-bold text-brand-text">{{ row.when }}</td>
+              <td class="font-bold">{{ row.name }}</td>
+              <td>{{ row.categoryNames }}</td>
+              <td><ui-status-badge [tone]="row.statusTone">{{ row.statusLabel }}</ui-status-badge></td>
+              @if (editable()) {
+                <td>
+                  @if (row.editableRow) {
+                    <span class="flex justify-end gap-2">
+                      <button uiButton type="button" size="sm" variant="secondary" [attr.aria-label]="'Editar ' + row.name + ' (' + row.categoryNames + ')'" (click)="edit(row)">
+                        Editar
+                      </button>
+                      <button uiButton type="button" size="sm" variant="danger" [attr.aria-label]="'Remover ' + row.name + ' (' + row.categoryNames + ')'" [disabled]="busy()" (click)="remove(row)">
+                        Remover
+                      </button>
+                    </span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="rounded-lg border border-dashed border-line-strong bg-surface p-6 text-ink-2">Nenhuma bateria programada.</p>
+  }
+} @else if (heats.error()) {
+  <div role="alert" class="rounded-lg border-2 border-danger bg-surface p-6">
+    <p class="font-bold">Não foi possível carregar as baterias.</p>
+    <button uiButton class="mt-4" (click)="heats.reload()">Tentar de novo</button>
+  </div>
+} @else {
+  <div aria-busy="true" class="h-40 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando as baterias…</span></div>
+}

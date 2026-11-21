@@ -6,7 +6,7 @@
       <h1 class="text-2xl font-bold">{{ isNew() ? 'Novo evento' : event.value()?.name }}</h1>
       @if (event.value(); as e) {
         <p class="mt-1 text-sm text-ink-2">
-          {{ period() }} • {{ e.venue }}, {{ e.city }}/{{ e.state }} • {{ e.categoryCount }} categorias • {{ e.heatCount }} baterias
+          {{ period() }} • {{ e.venue }}, {{ e.city }}/{{ e.state }} • {{ counts() }}
         </p>
       }
     </div>
@@ -47,7 +47,12 @@
         <p role="alert" class="mt-3 rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
       }
       @if (e.status === 'DRAFT' && e.categoryCount === 0 && !actionError()) {
-        <p class="mt-2 text-sm text-ink-2">Para publicar, o evento precisa de ao menos uma categoria.</p>
+        <p class="mt-2 text-sm text-ink-2">
+          Para publicar, o evento precisa de ao menos uma categoria.
+          @if (tab() !== 'categorias') {
+            <a routerLink="." [queryParams]="{ aba: 'categorias' }" replaceUrl class="font-bold text-brand-text underline">Adicionar categorias</a>
+          }
+        </p>
       }
     }
     @if (locked()) {
@@ -55,9 +60,37 @@
         Evento {{ status()?.label?.toLowerCase() }}: os dados ficam guardados para consulta e não podem mais ser alterados.
       </p>
     }
+
+    <!-- Abas do evento: dados, categorias e baterias. O conteúdo de cada aba é um componente filho. -->
+    <ui-tabs class="mt-6 block" label="Seções do evento" [tabs]="tabs()" [selected]="tab()" (selectedChange)="selectTab($event)" />
   }
 
-  <form novalidate class="mt-6 grid max-w-3xl gap-4" (submit)="onSubmit($event)">
+  <div class="mt-6" [attr.role]="isNew() ? null : 'tabpanel'" [attr.aria-labelledby]="activeTabId()">
+  @if (event.value(); as e) {
+    <!--
+      @defer: o código de cada aba vira um arquivo separado, baixado só quando a aba é aberta
+      (quem só edita os dados do evento não baixa os painéis). O @placeholder aparece enquanto baixa.
+    -->
+    @switch (tab()) {
+      @case ('categorias') {
+        @defer {
+          <app-event-categories [eventId]="e.id" [editable]="!readOnly()" (changed)="onChildChanged()" />
+        } @placeholder (minimum 200ms) {
+          <div aria-busy="true" class="h-40 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando…</span></div>
+        }
+      }
+      @case ('baterias') {
+        @defer {
+          <app-event-heats [event]="e" [editable]="!readOnly()" (changed)="onChildChanged()" />
+        } @placeholder (minimum 200ms) {
+          <div aria-busy="true" class="h-40 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando…</span></div>
+        }
+      }
+    }
+  }
+
+  <!-- [hidden] em vez de @if: a aba "Dados" mantém o formulário (e o que foi digitado) ao trocar de aba. -->
+  <form novalidate class="grid max-w-3xl gap-4" [hidden]="tab() !== 'dados' && !isNew()" (submit)="onSubmit($event)">
     <ui-card heading="Dados do evento">
       <div class="grid gap-4 sm:grid-cols-2">
         <ui-form-field class="sm:col-span-2" label="Nome do evento" required [error]="fieldError('name')">
@@ -158,6 +191,7 @@
       </div>
     }
   </form>
+  </div>
 
   <ui-confirm-dialog #cancelDialog heading="Cancelar este evento?" confirmLabel="Cancelar evento" (confirmed)="cancelEvent()">
     <p>O evento deixa de receber inscrições e não poderá mais ser alterado. Os dados ficam guardados.</p>
