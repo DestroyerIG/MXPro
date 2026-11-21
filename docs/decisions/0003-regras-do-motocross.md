@@ -26,6 +26,21 @@
 - **Determinismo:** mesmos eventos + mesma configuração = mesmo resultado. Eventos são ordenados por
   `deviceTimestamp` e, em empate, pelo `id` (nunca pela ordem de chegada ao servidor).
 
+## Detalhes de cálculo (passo 5.2)
+
+- **Bandeirada:** o piloto termina na primeira passagem válida **a partir do instante** do `FINISH_FLAG`. Por
+  isso, na pista, a bandeirada deve ser marcada **antes** do toque do líder. Uma janela de tolerância foi descartada:
+  um piloto que cruzasse segundos antes do líder terminaria uma volta mais cedo. A tela de pista (fase 5) vai
+  garantir essa ordem. **A validar com o contratante.**
+- **Número fixo de voltas sem `FINISH_FLAG`:** a bandeirada é o momento em que o primeiro piloto da bateria completa
+  as voltas. Com o evento presente, vale o evento.
+- **Bateria com mais de uma categoria:** a bandeirada é a mesma para todos (é física); classificação, vencedor e
+  mínimo de voltas são calculados **por categoria**.
+- **Sem nenhuma volta válida:** status `DNS` (não largou), depois dos não classificados e antes dos desclassificados.
+- **Correções:** evento repetido (mesmo `id`) conta uma vez; `UNDO` não pode ser desfeito; penalidade dada depois
+  da bandeirada (revisão) vale; passagem anterior à largada não vira volta.
+- **Passagens ignoradas** (abaixo da mínima ou depois de terminar) saem numa lista à parte, para revisão e auditoria.
+
 ## Consequências
 
 - Fecha o ponto em aberto do ADR 0001 (decisão 2).
