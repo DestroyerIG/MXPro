@@ -201,7 +201,9 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 |---|---|---|
 | `/entrar` | Login (e-mail e senha) | Equipe e pilotos |
 | `/painel` | Painel do evento | Organizador / secretaria |
-| `/painel/<área>` | Eventos, Categorias, Inscrições, Cronometragem, Resultados, Campeonato, Financeiro, Equipe | Organizador / secretaria |
+| `/painel/eventos` | Lista de eventos com filtro por status | Organizador / secretaria (só consulta) |
+| `/painel/eventos/novo` · `/painel/eventos/:id` | Criar e editar evento; publicar, encerrar/reabrir inscrições, cancelar e excluir rascunho | Organizador (secretaria vê sem editar) |
+| `/painel/<área>` | Categorias, Inscrições, Cronometragem, Resultados, Campeonato, Financeiro, Equipe | Organizador / secretaria |
 | `/cronometragem` | Tela de pista para tablet/celular | Cronometrista / organizador |
 | `/ao-vivo/telao` | Classificação ao vivo em modo telão | Público (sem login) |
 | `/componentes` | Catálogo do design system | Desenvolvimento |
