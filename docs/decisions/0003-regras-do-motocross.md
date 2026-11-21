@@ -41,6 +41,16 @@
   da bandeirada (revisão) vale; passagem anterior à largada não vira volta.
 - **Passagens ignoradas** (abaixo da mínima ou depois de terminar) saem numa lista à parte, para revisão e auditoria.
 
+## Pontos e geral do dia (passo 5.3)
+
+- Só quem é **classificado** numa bateria pontua nela (tabela da prova; fora da tabela, 0). Não classificado, DNS e
+  DSQ fazem 0 naquela bateria; o desclassificado perde só os pontos da bateria em que foi desclassificado.
+- **Geral do dia** por categoria: soma dos pontos das baterias. Empate: melhor posição na **última** bateria; se
+  persistir (ex.: nenhum dos dois classificado nela), a bateria anterior, e assim por diante.
+- Tem posição no geral quem foi classificado em **ao menos uma** bateria (mesmo com 0 ponto, fora da tabela). Quem
+  nunca foi classificado aparece sem posição.
+- O geral é **provisório** enquanto alguma bateria do dia não teve bandeirada.
+
 ## Consequências
 
 - Fecha o ponto em aberto do ADR 0001 (decisão 2).
