@@ -243,6 +243,22 @@ describe('pagamento', () => {
     expect(renewed.statusCode).toBe(400);
     expect(renewed.json().details[0].field).toBe('raceNumber');
   });
+
+  it('"pago sem vaga": a tela sabe que o Pix foi recebido e NÃO deixa gerar outro', async () => {
+    const { mx2, url } = await setup();
+    const res = await post(url, form(mx2.id));
+    const cookie = cookieOf(res)!;
+    const id = res.json().registration.id as string;
+    const orderId = mp.last();
+    now = minutes(40);
+    await post(url, form(mx2.id, { account: account('outro@mxpro.test') })); // pegou o número 27
+    mp.set(orderId, 'processed', 'accredited'); // o primeiro Pix foi pago tarde demais
+    const seen = (await get(`/api/registrations/${id}`, cookie)).json();
+    expect(seen).toMatchObject({ status: 'EXPIRED', paymentReceived: true, pix: null });
+    const renew = await app.inject({ method: 'POST', url: `/api/registrations/${id}/pix`, cookies: { [SESSION_COOKIE]: cookie } });
+    expect(renew.statusCode).toBe(409);
+    expect(renew.json().code).toBe('PAYMENT_RECEIVED');
+  });
 });
 
 describe('quem vê cada inscrição', () => {

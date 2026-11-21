@@ -86,12 +86,12 @@ export async function getPublicEvent(db: PrismaClient, eventId: string, now: Dat
 const registrationInclude = {
   event: { select: { id: true, name: true, startDate: true, timeZone: true } },
   eventCategory: { select: { id: true, category: { select: { name: true } } } },
-  payments: { where: { status: 'PENDING' }, orderBy: { createdAt: 'desc' }, take: 1 },
+  payments: { where: { status: { in: ['PENDING', 'PAID'] } }, orderBy: { createdAt: 'desc' } },
 } satisfies Prisma.RegistrationInclude;
 type RegistrationRow = Prisma.RegistrationGetPayload<{ include: typeof registrationInclude }>;
 
 function toDto(r: RegistrationRow, now: Date): RegistrationDto {
-  const open = r.payments[0];
+  const open = r.payments.find((p) => p.status === 'PENDING');
   return {
     id: r.id,
     event: { id: r.event.id, name: r.event.name, startDate: fromDate(r.event.startDate), timeZone: r.event.timeZone },
@@ -107,6 +107,7 @@ function toDto(r: RegistrationRow, now: Date): RegistrationDto {
       r.status === 'PENDING_PAYMENT' && open && open.expiresAt > now
         ? { paymentId: open.id, status: open.status, amountCents: open.amountCents, pixCopyPaste: open.pixCopyPaste, expiresAt: open.expiresAt.toISOString() }
         : null,
+    paymentReceived: r.payments.some((p) => p.status === 'PAID'),
   };
 }
 
@@ -286,19 +287,18 @@ async function ownRegistration(db: PrismaClient, id: string, user: SessionUser, 
  */
 export async function getRegistration(pix: PixDeps, id: string, user: SessionUser, now: Date): Promise<RegistrationDto> {
   const { db } = pix;
-  const reg = await ownRegistration(db, id, user, { staffAllowed: true });
-  if (reg.status === 'PENDING_PAYMENT') {
-    const open = await db.payment.findFirst({ where: { registrationId: id, status: 'PENDING' }, select: { id: true } });
-    if (open) {
-      try {
-        await refreshPaymentIfStale(pix, open.id);
-      } catch {
-        // Mercado Pago fora do ar: mostra o que temos; a próxima consulta tenta de novo.
-      }
+  await ownRegistration(db, id, user, { staffAllowed: true });
+  // Pix ainda em aberto (mesmo com a reserva já vencida: pode ter sido pago no limite do prazo).
+  const open = await db.payment.findFirst({ where: { registrationId: id, status: 'PENDING' }, select: { id: true } });
+  if (open) {
+    try {
+      await refreshPaymentIfStale(pix, open.id);
+    } catch {
+      // Mercado Pago fora do ar: mostra o que temos; a próxima consulta tenta de novo.
     }
-    // Reserva vencida sem pagamento libera a vaga (se o Pix for pago depois, o webhook trata).
-    await db.$transaction((tx) => expireStaleHolds(tx, { id }, now));
   }
+  // Reserva vencida sem pagamento libera a vaga (se o Pix for pago depois, ainda é tratado).
+  await db.$transaction((tx) => expireStaleHolds(tx, { id }, now));
   return loadDto(db, id, now);
 }
 
@@ -315,6 +315,10 @@ export async function renewPix(pix: PixDeps, id: string, user: SessionUser, now:
   });
   if (reg.status === 'CONFIRMED') throw new AppError(409, 'ALREADY_CONFIRMED', 'Esta inscrição já está confirmada.');
   if (reg.status === 'CANCELED') throw new AppError(409, 'REGISTRATION_CANCELED', 'Esta inscrição foi cancelada.');
+  // Já pagou (o Pix chegou depois de a reserva vencer): outro Pix seria cobrança em dobro.
+  if (await db.payment.count({ where: { registrationId: id, status: 'PAID' } })) {
+    throw new AppError(409, 'PAYMENT_RECEIVED', 'Seu Pix já foi recebido. A organização vai resolver a sua vaga; não pague de novo.');
+  }
 
   const holdValid = reg.status === 'PENDING_PAYMENT' && reg.holdExpiresAt !== null && reg.holdExpiresAt > now;
   if (!holdValid) {

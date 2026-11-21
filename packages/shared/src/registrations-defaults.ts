@@ -70,6 +70,11 @@ export interface RegistrationDto {
   confirmedAt: string | null;
   /** Pix em aberto (null se não houver: confirmada, vencida ou gratuita). */
   pix: PixChargeDto | null;
+  /**
+   * Algum Pix desta inscrição foi pago. Com status EXPIRED, é o caso "pago sem vaga" (pagou depois
+   * de a reserva vencer e a vaga ou o número já tinham sido ocupados): a organização resolve.
+   */
+  paymentReceived: boolean;
 }
 
 /** Resposta da inscrição: a inscrição e, se o Pix não pôde ser gerado agora, o motivo (dá para tentar de novo). */
