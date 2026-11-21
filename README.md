@@ -56,9 +56,9 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 | **Piloto** | Inscrição, pagamento via Pix, resultados, histórico e pontuação do campeonato |
 | **Público e equipes** | Classificação ao vivo no celular ou no telão, sem login |
 
-> **Estado atual:** a primeira fatia do front-end está pronta e roda com **dados fictícios**: design system, painel
-> do organizador, cronometragem para tablet e telão ao vivo. API, banco de dados, Pix e motor de regras são as
-> próximas fases (veja o [roadmap](#roadmap)).
+> **Estado atual:** fundação (API, banco, login por perfil, CI) e cadastro de **eventos, categorias e baterias**
+> prontos, com o painel do evento mostrando dados reais. Cronometragem e telão ainda usam dados fictícios.
+> Inscrições com Pix, motor de regras e cronometragem offline real são as próximas fases (veja o [roadmap](#roadmap)).
 
 ## Telas
 
@@ -83,21 +83,26 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 
 ## Funcionalidades
 
-### Disponíveis (front-end com dados fictícios)
+### Disponíveis
 
 - **Design system com identidade configurável:** todas as cores vêm de design tokens (CSS variables). Nome, logo e
   cor do contratante vêm da API e são aplicados em tempo de execução; os tons derivados são calculados para garantir
   contraste **WCAG AA**. A última marca fica guardada no aparelho, para as telas abrirem certas mesmo offline. Tem
   tema claro e escuro.
-- **Painel do organizador:** menu lateral responsivo (vira gaveta no celular) e painel do evento com totais, próximas
-  baterias com situação e gráfico de inscritos por categoria. Mostra estados de carregamento e de erro.
-- **Cronometragem para tablet:**
+- **Painel do organizador:** menu lateral responsivo (vira gaveta no celular) e painel do evento com **dados reais**:
+  seletor de evento (abre o próximo publicado), totais, próximas baterias no fuso do evento e inscritos por categoria.
+  Inscritos aparecem zerados, com aviso, até existir a fase de inscrições.
+- **Eventos, categorias e baterias:** campeonatos e etapas (de um ou mais dias), publicar, encerrar inscrições,
+  cancelar; categorias do evento com modalidade, valor em reais e vagas; programação de baterias com uma ou mais
+  categorias. Catálogo único de categorias. Secretaria consulta; só o organizador altera.
+- **Login por perfil:** cada perfil cai na sua área; sessão em cookie httpOnly; a cronometragem abre offline.
+- **Cronometragem para tablet** (dados fictícios até a fase 5):
   - um toque no cartão registra uma passagem;
   - penalidade e desclassificação "armam" o próximo toque;
   - **Desfazer** no lugar de diálogos de confirmação;
   - bandeirada;
   - indicador **OFFLINE** com contador de pendentes e sincronização em lotes ao reconectar.
-- **Telão ao vivo:**
+- **Telão ao vivo** (dados fictícios até a fase 6):
   - classificação com posição, voltas, melhor volta e diferença para o líder (ou "+N voltas");
   - paginação automática para baterias grandes e tipografia proporcional à tela;
   - aviso de dados desatualizados quando a conexão cai.
@@ -229,6 +234,7 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `GET /api/championships` | Campeonatos com o número de etapas — organizador e secretaria |
 | `POST /api/championships` · `PATCH`/`DELETE /api/championships/:id` | Cria, renomeia e exclui (só sem etapas) — **somente organizador** |
 | `GET /api/events` · `GET /api/events/:id` | Eventos (filtros `status` e `championshipId`), com a janela de inscrição e se está aberta agora — organizador e secretaria |
+| `GET /api/events/:id/dashboard` | Painel do evento numa resposta só: evento, modalidades, próximas baterias e inscritos por categoria — organizador e secretaria |
 | `POST /api/events` · `PATCH /api/events/:id` | Cria (como rascunho) e edita; as regras entre campos valem no resultado da edição — **somente organizador** |
 | `POST /api/events/:id/publish` · `/cancel` | Publica (exige ao menos uma categoria) e cancela — **somente organizador** |
 | `DELETE /api/events/:id` | Exclui só rascunho vazio; os demais são cancelados — **somente organizador** |
@@ -307,7 +313,7 @@ pnpm build
 - [x] **Front-end, primeira fatia:** app Angular, design system, painel do organizador, painel do evento,
       cronometragem para tablet e telão ao vivo (dados fictícios)
 - [x] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • ~~CI~~ ✓
-- [ ] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria
+- [x] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria, e painel do evento com dados reais
 - [ ] **Motor de regras (Motocross):** baterias, grid, tempo + voltas, volta mínima, penalidades, pontos e desempate
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
