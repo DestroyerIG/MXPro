@@ -9,6 +9,7 @@ import {
   publishEvent,
   updateEvent,
 } from '../events/events.service.ts';
+import { getEventDashboard } from '../events/dashboard.service.ts';
 import { idParam } from './params.ts';
 
 const eventId = (params: unknown) => idParam(params, 'EVENT_NOT_FOUND', 'Evento não encontrado.');
@@ -27,6 +28,11 @@ export async function eventRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get('/events/:id', { preHandler: staff }, async (request) => getEvent(app.db, eventId(request.params), new Date()));
+
+  // Painel do evento (tela inicial do organizador/secretaria).
+  app.get('/events/:id/dashboard', { preHandler: staff }, async (request) =>
+    getEventDashboard(app.db, eventId(request.params), new Date()),
+  );
 
   app.post('/events', { preHandler: organizer }, async (request, reply) => {
     const event = await createEvent(app.db, request.body ?? {}, new Date());
