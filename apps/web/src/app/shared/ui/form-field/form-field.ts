@@ -55,7 +55,7 @@ export class FormField {
   host: {
     class:
       'w-full rounded-md border bg-surface px-3 text-sm text-ink placeholder:text-muted ' +
-      'h-10 [&:is(textarea)]:h-auto [&:is(textarea)]:py-2',
+      'h-10 [&:is(textarea)]:h-auto [&:is(textarea)]:py-2 disabled:cursor-not-allowed disabled:bg-zebra disabled:text-ink-2',
     '[class.border-control]': '!field.error()',
     '[class.border-danger]': '!!field.error()',
     '[id]': 'field.controlId',
