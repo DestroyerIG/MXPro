@@ -228,6 +228,9 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `POST /api/events` · `PATCH /api/events/:id` | Cria (como rascunho) e edita; as regras entre campos valem no resultado da edição — **somente organizador** |
 | `POST /api/events/:id/publish` · `/cancel` | Publica (exige ao menos uma categoria) e cancela — **somente organizador** |
 | `DELETE /api/events/:id` | Exclui só rascunho vazio; os demais são cancelados — **somente organizador** |
+| `GET /api/categories` · `POST` · `PATCH`/`DELETE /api/categories/:id` | Catálogo de categorias (filtro `active`); categoria já usada é desativada, não excluída — leitura: organizador e secretaria; alteração: **somente organizador** |
+| `GET`/`POST /api/events/:id/categories` · `PATCH`/`DELETE …/:eventCategoryId` | Categorias do evento: modalidade, valor em centavos e vagas. Não sai do evento se estiver em bateria ou for a última de um evento publicado |
+| `GET`/`POST /api/events/:id/heats` · `PATCH`/`DELETE …/:heatId` | Baterias com uma ou mais categorias e horário dentro das datas do evento (no fuso dele). Só bateria programada é alterada |
 
 Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
 contra CSRF. Detalhes e motivos em [`docs/decisions/0002`](docs/decisions/0002-autenticacao-por-sessao-em-cookie.md).
