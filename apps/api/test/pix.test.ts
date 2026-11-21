@@ -1,59 +1,15 @@
 import type { PrismaClient } from '@mxpro/db';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MercadoPagoOAuth } from '../src/payments/mercadopago/oauth-client.ts';
-import type { CreatePixOrderInput, MercadoPagoOrder, MercadoPagoOrders } from '../src/payments/mercadopago/orders-client.ts';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { hmac, manifest } from '../src/payments/mercadopago/webhook-signature.ts';
 import { applyOrder, createPixCharge, refreshPaymentIfStale, syncPayment } from '../src/payments/pix.service.ts';
-import { encryptToken } from '../src/payments/token-cipher.ts';
 import { pixDeps } from '../src/routes/payments.ts';
 import { actingAs, createUser, integrationApp, resetDb, testDb } from './db-helpers.ts';
+import { MP_ENV, MP_WEBHOOK_SECRET as WEBHOOK_SECRET, SELLER_TOKEN, connectSellerAccount, fakeOAuth, fakeOrders } from './mp-fakes.ts';
 
 /**
  * Cobrança Pix e webhook com o Mercado Pago SIMULADO em memória (sem rede).
  * O "Mercado Pago" de mentira guarda os pedidos; o teste muda o estado deles como o banco do pagador faria.
  */
-
-const KEY = Buffer.alloc(32, 9);
-const WEBHOOK_SECRET = 'segredo-do-webhook';
-const MP_ENV = {
-  MP_CLIENT_ID: '1234567890',
-  MP_CLIENT_SECRET: 'segredo-do-app',
-  MP_REDIRECT_URI: 'https://mxpro.test/api/payments/mercadopago/callback',
-  MP_WEBHOOK_SECRET: WEBHOOK_SECRET,
-  PAYMENT_TOKEN_KEY: KEY.toString('base64'),
-};
-const SELLER_TOKEN = 'APP_USR-token-do-vendedor';
-
-/** Mercado Pago simulado: pedidos em memória. */
-function fakeOrders() {
-  const orders = new Map<string, MercadoPagoOrder>();
-  const created: { token: string; input: CreatePixOrderInput }[] = [];
-  let next = 1;
-  const api = {
-    createPixOrder: vi.fn<MercadoPagoOrders['createPixOrder']>((token, input) => {
-      created.push({ token, input });
-      const amount = `${input.amountCents / 100}.00`;
-      const order: MercadoPagoOrder = {
-        id: `ORD0000${next++}`,
-        status: 'action_required',
-        status_detail: 'waiting_transfer',
-        external_reference: input.externalReference,
-        total_amount: amount,
-        transactions: { payments: [{ id: 'PAY01', payment_method: { qr_code: `00020101PIX-${next}` } }] },
-      };
-      orders.set(order.id, order);
-      return Promise.resolve(order);
-    }),
-    getOrder: vi.fn<MercadoPagoOrders['getOrder']>((_token, id) => Promise.resolve(structuredClone(orders.get(id)!))),
-    cancelOrder: vi.fn<MercadoPagoOrders['cancelOrder']>(),
-  };
-  /** O pagador pagou / o Pix venceu / houve estorno. */
-  const set = (id: string, status: string, detail: string, paid?: string) => {
-    const o = orders.get(id)!;
-    orders.set(id, { ...o, status, status_detail: detail, total_paid_amount: paid ?? o.total_amount });
-  };
-  return { api, created, set, orders };
-}
 
 let db: PrismaClient;
 let app: Awaited<ReturnType<typeof integrationApp>>;
@@ -71,19 +27,8 @@ beforeEach(async () => {
   await resetDb(db);
   now = new Date('2027-02-01T12:00:00Z');
   mp = fakeOrders();
-  const oauth: MercadoPagoOAuth = { exchangeCode: vi.fn(), refresh: vi.fn() };
-  app = await integrationApp(db, MP_ENV, { mercadoPagoOAuth: oauth, mercadoPagoOrders: mp.api, now: () => now });
-  // Conta do contratante já conectada (passo 6.2).
-  await db.mercadoPagoAccount.create({
-    data: {
-      id: 1,
-      mpUserId: '241983636',
-      accessTokenEncrypted: encryptToken(SELLER_TOKEN, KEY),
-      refreshTokenEncrypted: encryptToken('TG-refresh', KEY),
-      liveMode: false,
-      expiresAt: new Date('2027-07-01T00:00:00Z'),
-    },
-  });
+  app = await integrationApp(db, MP_ENV, { mercadoPagoOAuth: fakeOAuth(), mercadoPagoOrders: mp.api, now: () => now });
+  await connectSellerAccount(db);
 });
 
 const deps = () => pixDeps(app);

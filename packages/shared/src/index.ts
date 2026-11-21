@@ -7,3 +7,4 @@ export * from './event-categories.js';
 export * from './dashboard.js';
 export * from './rules.js';
 export * from './payments.js';
+export * from './registrations.js';

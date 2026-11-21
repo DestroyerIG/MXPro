@@ -48,6 +48,14 @@ export class AuthService {
       throw new AppError(403, 'USER_INACTIVE', 'Seu acesso está desativado. Fale com o organizador do evento.');
     }
 
+    return this.createSession(user, meta);
+  }
+
+  /** Abre uma sessão para o usuário (login, ou a conta recém-criada na inscrição). */
+  async createSession(
+    user: Parameters<typeof toSessionUser>[0],
+    meta: { userAgent?: string; ip?: string },
+  ): Promise<LoginResult> {
     const token = generateSessionToken();
     const expiresAt = new Date(Date.now() + this.sessionTtlMs);
     await this.db.session.create({

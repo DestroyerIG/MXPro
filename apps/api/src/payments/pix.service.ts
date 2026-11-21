@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { Prisma, type PrismaClient } from '@mxpro/db';
+import type { PixChargeDto } from '@mxpro/shared';
 import type { MercadoPagoConfig } from '../config.ts';
 import { AppError } from '../errors.ts';
 import { getAccessToken } from './mercadopago/connection.service.ts';
@@ -28,15 +29,6 @@ export interface PixDeps {
   oauth: MercadoPagoOAuth | null;
   orders: MercadoPagoOrders | null;
   now?: () => Date;
-}
-
-export interface PixChargeDto {
-  paymentId: string;
-  status: 'PENDING' | 'PAID' | 'EXPIRED' | 'REFUNDED' | 'CANCELED';
-  amountCents: number;
-  /** Pix "copia e cola"; o QR Code é desenhado a partir dele. */
-  pixCopyPaste: string;
-  expiresAt: string;
 }
 
 type Outcome = 'PENDING' | 'PAID' | 'EXPIRED' | 'CANCELED' | 'REFUNDED';

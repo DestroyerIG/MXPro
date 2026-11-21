@@ -14,6 +14,7 @@ import { eventRoutes } from './routes/events.ts';
 import { authRoutes } from './routes/auth.ts';
 import { healthRoutes } from './routes/health.ts';
 import { paymentRoutes } from './routes/payments.ts';
+import { registrationRoutes } from './routes/registrations.ts';
 import { settingsRoutes } from './routes/settings.ts';
 import { userRoutes } from './routes/users.ts';
 
@@ -90,6 +91,7 @@ export async function buildApp({ config, db, mercadoPagoOAuth, mercadoPagoOrders
       await api.register(eventRoutes);
       await api.register(categoryRoutes);
       await api.register(paymentRoutes);
+      await api.register(registrationRoutes);
     },
     { prefix: '/api' },
   );
