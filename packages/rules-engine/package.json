@@ -1,0 +1,22 @@
+{
+  "name": "@mxpro/rules-engine",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Motor de regras e pontuação das provas: funções puras e determinísticas, sem banco, rede ou relógio",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.0"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vitest": "^5.0.0"
+  }
+}
