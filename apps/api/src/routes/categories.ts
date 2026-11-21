@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createCategory, deleteCategory, listCategories, updateCategory } from '../events/categories.service.ts';
 import { addEventCategory, listEventCategories, removeEventCategory, updateEventCategory } from '../events/event-categories.service.ts';
 import { createHeat, deleteHeat, listHeats, updateHeat } from '../events/heats.service.ts';
+import { getRules, saveRules } from '../events/rules.service.ts';
 import { idParam } from './params.ts';
 
 const categoryId = (p: unknown) => idParam(p, 'CATEGORY_NOT_FOUND', 'Categoria não encontrada.');
@@ -50,6 +51,19 @@ export async function categoryRoutes(app: FastifyInstance): Promise<void> {
   app.delete('/events/:id/categories/:eventCategoryId', { preHandler: organizer }, async (request, reply) => {
     await removeEventCategory(app.db, eventId(request.params), eventCategoryId(request.params));
     return reply.status(204).send();
+  });
+
+  // ─── Regras da prova da categoria (configuração versionada do motor de regras) ───
+  app.get('/events/:id/categories/:eventCategoryId/rules', { preHandler: staff }, async (request) =>
+    getRules(app.db, eventId(request.params), eventCategoryId(request.params)),
+  );
+  app.put('/events/:id/categories/:eventCategoryId/rules', { preHandler: organizer }, async (request) => {
+    const rules = await saveRules(app.db, eventId(request.params), eventCategoryId(request.params), request.body ?? {}, request.user?.id ?? null);
+    request.log.info(
+      { userId: request.user?.id, eventCategoryId: rules.eventCategoryId, version: rules.current?.version, reason: rules.current?.reason },
+      'regras da prova salvas',
+    );
+    return rules;
   });
 
   // ─── Baterias ───

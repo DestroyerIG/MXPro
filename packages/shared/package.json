@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mxpro/rules-engine": "workspace:*",
     "zod": "^4.6.0"
   },
   "devDependencies": {

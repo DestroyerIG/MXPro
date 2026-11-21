@@ -1,7 +1,8 @@
 import { Prisma, type PrismaClient } from '@mxpro/db';
-import { type EventCategoryDto, addEventCategorySchema, updateEventCategorySchema } from '@mxpro/shared';
+import { type EventCategoryDto, MODALITY_LABELS, addEventCategorySchema, updateEventCategorySchema } from '@mxpro/shared';
 import { AppError } from '../errors.ts';
 import { byName, editableEvent, existingEvent, fieldError } from './event-guard.ts';
+import { hasSavedRules } from './rules.service.ts';
 
 /** Categorias disputadas num evento: modalidade, valor da inscrição (centavos) e vagas. */
 
@@ -64,7 +65,16 @@ export async function updateEventCategory(
 ): Promise<EventCategoryDto> {
   const data = updateEventCategorySchema.parse(body);
   await editableEvent(db, eventId);
-  await findInEvent(db, eventId, id);
+  const current = await findInEvent(db, eventId, id);
+  // Regras salvas são de uma modalidade: trocar a modalidade deixaria as regras sem sentido.
+  if (data.modality && data.modality !== current.modality && (await hasSavedRules(db, id))) {
+    throw new AppError(
+      409,
+      'RULES_EXIST',
+      `Esta categoria já tem regras de ${MODALITY_LABELS[current.modality]} salvas. A modalidade não pode mais ser trocada.`,
+      [{ field: 'modality', message: 'A categoria já tem regras salvas desta modalidade.' }],
+    );
+  }
   return toDto(await db.eventCategory.update({ where: { id }, data, include }));
 }
 
