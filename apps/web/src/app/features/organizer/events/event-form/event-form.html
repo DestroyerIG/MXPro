@@ -68,23 +68,16 @@
   <div class="mt-6" [attr.role]="isNew() ? null : 'tabpanel'" [attr.aria-labelledby]="activeTabId()">
   @if (event.value(); as e) {
     <!--
-      @defer: o código de cada aba vira um arquivo separado, baixado só quando a aba é aberta
-      (quem só edita os dados do evento não baixa os painéis). O @placeholder aparece enquanto baixa.
+      Sem @defer de propósito: medimos e o @defer põe o "motor" dele (~9 kB) no bundle PRINCIPAL,
+      baixado por todas as telas (inclusive telão e cronometragem, que precisam ser enxutos). Os
+      painéis ficam no arquivo desta página, que só o organizador/secretaria abre.
     -->
     @switch (tab()) {
       @case ('categorias') {
-        @defer {
-          <app-event-categories [eventId]="e.id" [editable]="!readOnly()" (changed)="onChildChanged()" />
-        } @placeholder (minimum 200ms) {
-          <div aria-busy="true" class="h-40 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando…</span></div>
-        }
+        <app-event-categories [eventId]="e.id" [editable]="!readOnly()" (changed)="onChildChanged()" />
       }
       @case ('baterias') {
-        @defer {
-          <app-event-heats [event]="e" [editable]="!readOnly()" (changed)="onChildChanged()" />
-        } @placeholder (minimum 200ms) {
-          <div aria-busy="true" class="h-40 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando…</span></div>
-        }
+        <app-event-heats [event]="e" [editable]="!readOnly()" (changed)="onChildChanged()" />
       }
     }
   }
