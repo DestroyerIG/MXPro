@@ -38,6 +38,11 @@ export default [
         loadComponent: () => import('./events/event-form/event-form').then((m) => m.EventForm),
         title: 'Evento | MXPro',
       },
+      {
+        path: 'eventos/:id/categorias/:eventCategoryId/regras',
+        loadComponent: () => import('./events/category-rules/category-rules').then((m) => m.CategoryRules),
+        title: 'Regras da prova | MXPro',
+      },
       ...ORGANIZER_NAV.filter((item) => !['', 'cronometragem', 'eventos', 'categorias'].includes(item.path)).map((item) => ({
         path: item.path,
         component: ComingSoon,

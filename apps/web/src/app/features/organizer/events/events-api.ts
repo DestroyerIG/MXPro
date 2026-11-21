@@ -9,8 +9,10 @@ import type {
   CreateEventRequest,
   CreateHeatRequest,
   EventCategoryDto,
+  EventCategoryRulesDto,
   EventDto,
   HeatDto,
+  SaveRulesRequest,
   UpdateEventCategoryRequest,
   UpdateEventRequest,
   UpdateHeatRequest,
@@ -22,6 +24,7 @@ export const CHAMPIONSHIPS_URL = '/api/championships';
 export const CATEGORIES_URL = '/api/categories';
 export const eventCategoriesUrl = (eventId: string) => `${EVENTS_URL}/${eventId}/categories`;
 export const heatsUrl = (eventId: string) => `${EVENTS_URL}/${eventId}/heats`;
+export const rulesUrl = (eventId: string, eventCategoryId: string) => `${eventCategoriesUrl(eventId)}/${eventCategoryId}/rules`;
 
 /**
  * Chamadas da API de eventos, campeonatos, categorias e baterias usadas pelas telas do organizador.
@@ -72,6 +75,11 @@ export class EventsApi {
   }
   removeEventCategory(eventId: string, id: string): Promise<void> {
     return firstValueFrom(this.http.delete<void>(`${eventCategoriesUrl(eventId)}/${id}`));
+  }
+
+  // ─── Regras da prova da categoria ───
+  saveRules(eventId: string, eventCategoryId: string, body: SaveRulesRequest): Promise<EventCategoryRulesDto> {
+    return firstValueFrom(this.http.put<EventCategoryRulesDto>(rulesUrl(eventId, eventCategoryId), body));
   }
 
   // ─── Baterias ───

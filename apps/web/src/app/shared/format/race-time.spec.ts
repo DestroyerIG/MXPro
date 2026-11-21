@@ -1,4 +1,4 @@
-import { formatCountdown, formatGap, formatPenalty, msToDisplay } from './race-time';
+import { formatCountdown, formatGap, formatPenalty, msToDisplay, parseRaceTime } from './race-time';
 
 describe('msToDisplay', () => {
   it('formata tempo de volta com milésimos (padrão)', () => {
@@ -54,5 +54,28 @@ describe('formatGap', () => {
   it('voltas de atraso no singular e no plural', () => {
     expect(formatGap({ kind: 'laps', laps: 1 })).toBe('+1 volta');
     expect(formatGap({ kind: 'laps', laps: 3 })).toBe('+3 voltas');
+  });
+});
+
+describe('parseRaceTime', () => {
+  it.each([
+    ['0:45.000', 45_000],
+    ['00:45.000', 45_000],
+    ['0:45', 45_000],
+    ['45', 45_000],
+    ['45.5', 45_500],
+    ['45,25', 45_250],
+    ['1:02.431', 62_431],
+    [' 1:30 ', 90_000],
+  ])('"%s" = %i ms', (text, ms) => {
+    expect(parseRaceTime(text)).toBe(ms);
+  });
+
+  it.each(['', 'abc', '1:75', '0:45.0001', '-5', '1:2:3', '45s'])('"%s" não é tempo', (text) => {
+    expect(parseRaceTime(text)).toBeNull();
+  });
+
+  it('volta e ida: o que msToDisplay escreve, parseRaceTime lê', () => {
+    for (const ms of [0, 45_000, 62_431, 599_999]) expect(parseRaceTime(msToDisplay(ms))).toBe(ms);
   });
 });

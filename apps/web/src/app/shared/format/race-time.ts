@@ -53,3 +53,17 @@ export function formatGap(gap: LiveGap): string {
     }
   }
 }
+
+/**
+ * Lê um tempo digitado pelo organizador e devolve milissegundos inteiros (null se não der para ler).
+ * Aceita "0:45.000", "0:45", "45", "45.5" e "45,5" (vírgula de quem digita em português).
+ * Casas decimais completam à direita: "45.5" = 45.500 s (não 45.005).
+ */
+export function parseRaceTime(text: string): number | null {
+  const match = /^(?:(\d{1,3}):)?(\d{1,2})(?:[.,](\d{1,3}))?$/.exec(text.trim());
+  if (!match) return null;
+  const [, minutes, seconds, fraction] = match;
+  // Com minutos, os segundos vão até 59 ("1:75" é erro de digitação, não 2:15).
+  if (minutes !== undefined && Number(seconds) > 59) return null;
+  return Number(minutes ?? 0) * 60_000 + Number(seconds) * 1000 + Number((fraction ?? '').padEnd(3, '0'));
+}

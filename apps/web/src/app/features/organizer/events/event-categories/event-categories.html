@@ -56,9 +56,7 @@
             <th scope="col" class="num">Valor</th>
             <th scope="col" class="num">Vagas</th>
             <th scope="col" class="num">Baterias</th>
-            @if (editable()) {
-              <th scope="col"><span class="sr-only">Ações</span></th>
-            }
+            <th scope="col"><span class="sr-only">Ações</span></th>
           </tr>
         </thead>
         <tbody>
@@ -69,18 +67,27 @@
               <td class="num whitespace-nowrap">{{ row.fee }}</td>
               <td class="num whitespace-nowrap">{{ row.slots }}</td>
               <td class="num">{{ row.heatCount }}</td>
-              @if (editable()) {
-                <td>
-                  <span class="flex justify-end gap-2">
+              <td>
+                <span class="flex justify-end gap-2">
+                  <a
+                    uiButton
+                    size="sm"
+                    variant="secondary"
+                    [routerLink]="['/painel/eventos', eventId(), 'categorias', row.id, 'regras']"
+                    [attr.aria-label]="'Regras da prova de ' + row.category.name"
+                  >
+                    Regras
+                  </a>
+                  @if (editable()) {
                     <button uiButton type="button" size="sm" variant="secondary" [attr.aria-label]="'Editar ' + row.category.name" (click)="edit(row)">
                       Editar
                     </button>
                     <button uiButton type="button" size="sm" variant="danger" [attr.aria-label]="'Remover ' + row.category.name" [disabled]="busy()" (click)="remove(row)">
                       Remover
                     </button>
-                  </span>
-                </td>
-              }
+                  }
+                </span>
+              </td>
             </tr>
           }
         </tbody>

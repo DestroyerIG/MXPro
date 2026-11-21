@@ -1,0 +1,186 @@
+<a [routerLink]="['/painel/eventos', id()]" [queryParams]="{ aba: 'categorias' }" class="text-sm font-bold text-brand-text underline-offset-2 hover:underline">
+  Voltar para as categorias do evento
+</a>
+
+@if (rules.hasValue() && category(); as c) {
+  @let r = rules.value()!;
+  <header class="mt-2 flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-bold">Regras da prova - {{ c.category.name }}</h1>
+      <p class="mt-1 text-sm text-ink-2">{{ event.value()?.name }} • {{ modalityLabel() }}</p>
+    </div>
+    @if (r.frozen) {
+      <ui-status-badge tone="info">Congelada na largada</ui-status-badge>
+    } @else if (r.saved) {
+      <ui-status-badge tone="ok">Salvas</ui-status-badge>
+    } @else if (r.supported) {
+      <ui-status-badge tone="warn">Modelo pronto, ainda não salvo</ui-status-badge>
+    }
+  </header>
+
+  @if (categories.value()?.categories; as all) {
+    @if (all.length > 1) {
+      <nav aria-label="Outras categorias do evento" class="mt-4 flex flex-wrap gap-2">
+        @for (other of all; track other.id) {
+          <a
+            [routerLink]="['/painel/eventos', id(), 'categorias', other.id, 'regras']"
+            [attr.aria-current]="other.id === c.id ? 'page' : null"
+            class="rounded-full border px-3 py-1 text-sm font-bold"
+            [class.border-brand]="other.id === c.id"
+            [class.border-line]="other.id !== c.id"
+          >{{ other.category.name }}</a>
+        }
+      </nav>
+    }
+  }
+
+  <h2 class="mt-6 mb-2 text-base font-bold">Modelo de prova</h2>
+  <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+    @for (card of modelCards; track card.modality) {
+      <li
+        class="rounded-lg border-2 bg-surface px-3 py-2 text-center"
+        [class.border-brand]="card.modality === c.modality"
+        [class.border-line]="card.modality !== c.modality"
+        [attr.aria-current]="card.modality === c.modality ? 'true' : null"
+      >
+        <span class="block text-sm font-bold">{{ card.label }}</span>
+        <span class="block text-xs text-ink-2">{{ card.ready ? 'modelo pronto' : 'em breve' }}</span>
+      </li>
+    }
+  </ul>
+  <p class="mt-2 text-sm text-ink-2">A modalidade vem da categoria. Para trocar, edite a categoria na aba Categorias do evento.</p>
+
+  @if (!r.supported) {
+    <p class="mt-6 rounded-lg border border-dashed border-line-strong bg-surface p-6">
+      As regras de {{ modalityLabel() }} ainda não estão disponíveis no sistema. Hoje o motor de regras cobre o Motocross;
+      as demais modalidades entram nas próximas fases.
+    </p>
+  } @else {
+    @if (r.frozen) {
+      <p class="mt-4 rounded-md border border-line-strong bg-surface px-4 py-3 text-sm">
+        Uma bateria desta categoria já largou. Mudanças criam uma nova versão e exigem motivo; a versão anterior fica guardada.
+      </p>
+    } @else if (r.current) {
+      <p class="mt-4 text-sm text-ink-2">Versão {{ r.current.version }}, salva {{ versionLine(r.current) }}.</p>
+    }
+    @if (!canEdit()) {
+      <p class="mt-4 text-sm text-ink-2">Só o organizador altera as regras da prova.</p>
+    } @else if (locked()) {
+      <p class="mt-4 text-sm text-ink-2">Evento encerrado ou cancelado: as regras ficam só para consulta.</p>
+    }
+
+    <form novalidate class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]" (submit)="onSubmit($event)">
+      <ui-card heading="Regras da prova - Motocross">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <ui-form-field label="Largada" [error]="fieldError('start')">
+            <select uiControl [formField]="rulesForm.start">
+              @for (o of startOptions; track o.id) {
+                <option [value]="o.id">{{ o.label }}</option>
+              }
+            </select>
+          </ui-form-field>
+          <ui-form-field label="Término" [error]="fieldError('finishType')">
+            <select uiControl [formField]="rulesForm.finishType">
+              @for (o of finishOptions; track o.id) {
+                <option [value]="o.id">{{ o.label }}</option>
+              }
+            </select>
+          </ui-form-field>
+          @if (model().finishType === 'TIME_PLUS_LAPS') {
+            <ui-form-field label="Duração (minutos)" hint="Ex.: 20 ou 20:30." [error]="fieldError('duration')">
+              <input uiControl type="text" inputmode="numeric" [formField]="rulesForm.duration" />
+            </ui-form-field>
+            <ui-form-field label="Voltas extras" hint="Depois de zerar o relógio." [error]="fieldError('extraLaps')">
+              <input uiControl type="text" inputmode="numeric" [formField]="rulesForm.extraLaps" />
+            </ui-form-field>
+          } @else {
+            <ui-form-field label="Nº de voltas" [error]="fieldError('laps')">
+              <input uiControl type="text" inputmode="numeric" [formField]="rulesForm.laps" />
+            </ui-form-field>
+          }
+          <ui-form-field label="Nº de baterias" [error]="fieldError('heatsPerCategory')">
+            <input uiControl type="text" inputmode="numeric" [formField]="rulesForm.heatsPerCategory" />
+          </ui-form-field>
+          <ui-form-field label="Volta mínima válida" hint="Mais curta que isso não conta. Ex.: 0:45.000." [error]="fieldError('minLap')">
+            <input uiControl type="text" inputmode="decimal" [formField]="rulesForm.minLap" />
+          </ui-form-field>
+          <ui-form-field label="Penalidade padrão (segundos)" hint="Sugerida na tela de pista." [error]="fieldError('penalty')">
+            <input uiControl type="text" inputmode="decimal" [formField]="rulesForm.penalty" />
+          </ui-form-field>
+          <ui-form-field label="% mínimo das voltas do vencedor" hint="Para ser classificado." [error]="fieldError('minLeaderLapsPct')">
+            <input uiControl type="text" inputmode="numeric" [formField]="rulesForm.minLeaderLapsPct" />
+          </ui-form-field>
+        </div>
+
+        @if (!readOnly()) {
+          @if (r.frozen) {
+            <ui-form-field class="mt-4" label="Motivo da mudança" required [error]="fieldError('reason')">
+              <textarea uiControl rows="2" [formField]="rulesForm.reason"></textarea>
+            </ui-form-field>
+          }
+          @if (error(); as message) {
+            <p role="alert" class="mt-4 rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+          }
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button uiButton type="submit" [disabled]="busy()">Salvar regras</button>
+            <button uiButton type="button" variant="secondary" (click)="restoreTemplate()">Restaurar modelo pronto</button>
+          </div>
+        }
+      </ui-card>
+
+      <ui-card heading="Tabela de pontos">
+        <ol class="grid grid-flow-col grid-cols-2 gap-x-4" [style.grid-template-rows]="'repeat(' + pointsRows() + ', auto)'">
+          @for (pt of rulesForm.points; track $index) {
+            <li class="flex items-center justify-between gap-2 px-2 py-1 even:bg-zebra">
+              <span class="text-sm text-ink-2">{{ $index + 1 }}º</span>
+              <input
+                type="text"
+                inputmode="numeric"
+                class="h-8 w-16 rounded-md border border-control bg-surface px-2 text-right text-sm font-bold disabled:cursor-not-allowed disabled:bg-zebra disabled:text-ink-2"
+                [attr.aria-label]="'Pontos do ' + ($index + 1) + 'º lugar'"
+                [attr.aria-invalid]="pointError($index) ? true : null"
+                [formField]="pt"
+              />
+            </li>
+          }
+        </ol>
+        @if (fieldError('points'); as message) {
+          <p class="mt-2 text-xs font-bold text-danger-text">{{ message }}</p>
+        }
+        <p class="mt-2 text-xs text-ink-2">Fora da tabela: 0 ponto.</p>
+        @if (!readOnly()) {
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button uiButton type="button" size="sm" variant="secondary" (click)="addPosition()">Adicionar posição</button>
+            <button uiButton type="button" size="sm" variant="secondary" [disabled]="model().points.length < 2" (click)="removeLastPosition()">
+              Remover última
+            </button>
+          </div>
+        }
+        <ui-form-field class="mt-4" label="Desempate" [error]="fieldError('tiebreak')">
+          <select uiControl [formField]="rulesForm.tiebreak">
+            @for (o of tiebreakOptions; track o.id) {
+              <option [value]="o.id">{{ o.label }}</option>
+            }
+          </select>
+        </ui-form-field>
+      </ui-card>
+    </form>
+
+    @if (r.history.length > 1) {
+      <ui-card class="mt-4" heading="Histórico de versões">
+        <ul class="space-y-1 text-sm">
+          @for (v of r.history; track v.version) {
+            <li><strong>Versão {{ v.version }}</strong>: {{ versionLine(v) }}@if (v.reason) { — {{ v.reason }} }</li>
+          }
+        </ul>
+      </ui-card>
+    }
+  }
+} @else if (rules.error() || categories.error()) {
+  <div role="alert" class="mt-4 rounded-lg border-2 border-danger bg-surface p-6">
+    <p class="font-bold">Não foi possível carregar as regras desta categoria.</p>
+    <button uiButton class="mt-4" (click)="rules.reload(); categories.reload()">Tentar de novo</button>
+  </div>
+} @else {
+  <div aria-busy="true" class="mt-4 h-64 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando as regras…</span></div>
+}
