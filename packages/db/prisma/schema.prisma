@@ -355,6 +355,8 @@ model Payment {
   pixCopyPaste     String        @map("pix_copy_paste")
   expiresAt        DateTime      @map("expires_at") @db.Timestamptz(3)
   paidAt           DateTime?     @map("paid_at") @db.Timestamptz(3)
+  /// Última consulta ao gateway: a tela "Aguardando pagamento" consulta no máximo de tempos em tempos.
+  lastCheckedAt    DateTime?     @map("last_checked_at") @db.Timestamptz(3)
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 

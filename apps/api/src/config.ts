@@ -29,6 +29,8 @@ const schema = z
     MP_CLIENT_SECRET: z.string().trim().min(1).optional(),
     /** URL de retorno cadastrada no aplicativo; precisa ser IGUAL à cadastrada (ex.: https://dominio/api/payments/mercadopago/callback). */
     MP_REDIRECT_URI: z.url('deve ser uma URL, ex.: https://meudominio.com.br/api/payments/mercadopago/callback').optional(),
+    /** Assinatura secreta dos webhooks (Suas integrações > Webhooks): valida que o aviso veio do Mercado Pago. */
+    MP_WEBHOOK_SECRET: z.string().trim().min(1).optional(),
     /** "true" = credenciais de teste (sandbox) na troca do código. */
     MP_TEST_MODE: z.enum(['true', 'false']).default('false'),
     /** Chave de 32 bytes em base64 que criptografa os tokens no banco. Gere com: openssl rand -base64 32 */
@@ -42,7 +44,7 @@ const schema = z
       ctx.addIssue({ code: 'custom', path: ['CORS_ORIGINS'], message: 'obrigatório em produção' });
     }
     // Mercado Pago: tudo ou nada (metade configurada é erro de digitação, não "desligado").
-    const mp = ['MP_CLIENT_ID', 'MP_CLIENT_SECRET', 'MP_REDIRECT_URI', 'PAYMENT_TOKEN_KEY'] as const;
+    const mp = ['MP_CLIENT_ID', 'MP_CLIENT_SECRET', 'MP_REDIRECT_URI', 'MP_WEBHOOK_SECRET', 'PAYMENT_TOKEN_KEY'] as const;
     const set = mp.filter((k) => env[k] !== undefined);
     if (set.length > 0 && set.length < mp.length) {
       for (const k of mp.filter((k) => env[k] === undefined)) {
@@ -56,6 +58,8 @@ export interface MercadoPagoConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
+  /** Segredo que assina os webhooks (HMAC-SHA256). */
+  webhookSecret: string;
   testMode: boolean;
   /** Chave AES-256 dos tokens guardados no banco. */
   tokenKey: Buffer;
@@ -91,11 +95,12 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     sessionTtlMs: e.SESSION_TTL_HOURS * 3_600_000,
     cookieSecure: e.NODE_ENV === 'production',
     mercadoPago:
-      e.MP_CLIENT_ID && e.MP_CLIENT_SECRET && e.MP_REDIRECT_URI && e.PAYMENT_TOKEN_KEY
+      e.MP_CLIENT_ID && e.MP_CLIENT_SECRET && e.MP_REDIRECT_URI && e.MP_WEBHOOK_SECRET && e.PAYMENT_TOKEN_KEY
         ? {
             clientId: e.MP_CLIENT_ID,
             clientSecret: e.MP_CLIENT_SECRET,
             redirectUri: e.MP_REDIRECT_URI,
+            webhookSecret: e.MP_WEBHOOK_SECRET,
             testMode: e.MP_TEST_MODE === 'true',
             tokenKey: Buffer.from(e.PAYMENT_TOKEN_KEY, 'base64'),
           }

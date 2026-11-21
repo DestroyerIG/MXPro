@@ -2,6 +2,7 @@ import type { MercadoPagoConnectResponse, MercadoPagoConnectResult } from '@mxpr
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { disconnect, finishConnection, getConnection, startConnection } from '../payments/mercadopago/connection.service.ts';
+import { type PixDeps, handleWebhook } from '../payments/pix.service.ts';
 
 /** Para onde o navegador volta depois do retorno do OAuth (a tela Financeiro mostra o resultado). */
 const FINANCE_PAGE = '/painel/financeiro';
@@ -42,9 +43,30 @@ export async function paymentRoutes(app: FastifyInstance): Promise<void> {
     return back(result);
   });
 
+  // Webhook do Mercado Pago (servidor a servidor, sem login): a autenticidade vem da assinatura.
+  // Responde 200 rápido (o Mercado Pago espera até 22 s e reenvia em caso de erro).
+  app.post(
+    '/payments/mercadopago/webhook',
+    { config: { rateLimit: { max: 120, timeWindow: '1 minute' } } },
+    async (request) => {
+      const result = await handleWebhook(pixDeps(app), {
+        headers: request.headers,
+        query: (request.query ?? {}) as Record<string, unknown>,
+        body: request.body,
+      });
+      request.log.info({ result, requestId: request.headers['x-request-id'] }, 'webhook do Mercado Pago');
+      return { ok: true };
+    },
+  );
+
   app.delete('/payments/mercadopago', { preHandler: organizer }, async (request, reply) => {
     await disconnect(app.db);
     request.log.info({ userId: request.user!.id }, 'conta do Mercado Pago desconectada');
     return reply.status(204).send();
   });
+}
+
+/** Dependências dos services de Pix a partir da aplicação. */
+export function pixDeps(app: FastifyInstance): PixDeps {
+  return { db: app.db, config: app.mercadoPago.config, oauth: app.mercadoPago.oauth, orders: app.mercadoPago.orders, now: app.now };
 }

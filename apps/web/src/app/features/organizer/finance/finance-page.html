@@ -25,8 +25,9 @@
     @if (!c.configured) {
       <p class="text-sm">
         O servidor ainda não tem as credenciais do aplicativo do Mercado Pago. Quem instala o sistema precisa preencher
-        as variáveis <code>MP_CLIENT_ID</code>, <code>MP_CLIENT_SECRET</code>, <code>MP_REDIRECT_URI</code> e
-        <code>PAYMENT_TOKEN_KEY</code> (veja o <code>.env.example</code>). Depois disso, a conexão é feita aqui.
+        as variáveis <code>MP_CLIENT_ID</code>, <code>MP_CLIENT_SECRET</code>, <code>MP_REDIRECT_URI</code>,
+        <code>MP_WEBHOOK_SECRET</code> e <code>PAYMENT_TOKEN_KEY</code> (veja o <code>.env.example</code>). Depois disso, a
+        conexão é feita aqui.
       </p>
     } @else if (account(); as a) {
       <div class="flex flex-wrap items-center gap-2">

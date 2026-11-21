@@ -7,6 +7,7 @@ import type { AppConfig } from './config.ts';
 import { registerAuth } from './auth/auth.plugin.ts';
 import { registerErrorHandling } from './errors.ts';
 import { type MercadoPagoOAuth, createMercadoPagoOAuth } from './payments/mercadopago/oauth-client.ts';
+import { type MercadoPagoOrders, createMercadoPagoOrders } from './payments/mercadopago/orders-client.ts';
 import { categoryRoutes } from './routes/categories.ts';
 import { championshipRoutes } from './routes/championships.ts';
 import { eventRoutes } from './routes/events.ts';
@@ -20,8 +21,10 @@ declare module 'fastify' {
   interface FastifyInstance {
     /** Cliente do banco, disponível em todas as rotas como `app.db`. */
     db: PrismaClient;
+    /** Hora atual (injetável nos testes). */
+    now: () => Date;
     /** Integração com o Mercado Pago (null = não configurada). */
-    mercadoPago: { config: AppConfig['mercadoPago']; oauth: MercadoPagoOAuth | null };
+    mercadoPago: { config: AppConfig['mercadoPago']; oauth: MercadoPagoOAuth | null; orders: MercadoPagoOrders | null };
   }
 }
 
@@ -31,13 +34,17 @@ export interface AppDeps {
   db: PrismaClient;
   /** Chamadas OAuth ao Mercado Pago. Os testes injetam uma versão falsa (sem rede). */
   mercadoPagoOAuth?: MercadoPagoOAuth;
+  /** API de Orders (Pix). Os testes injetam uma versão simulada. */
+  mercadoPagoOrders?: MercadoPagoOrders;
+  /** Relógio (os testes fixam a hora). */
+  now?: () => Date;
 }
 
 /**
  * Monta a aplicação SEM abrir porta: o server.ts chama listen(); os testes usam app.inject().
  * Rotas finas: validam entrada e chamam services (docs/arquitetura.md §6).
  */
-export async function buildApp({ config, db, mercadoPagoOAuth }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ config, db, mercadoPagoOAuth, mercadoPagoOrders, now }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     logger:
       config.nodeEnv === 'test'
@@ -56,7 +63,9 @@ export async function buildApp({ config, db, mercadoPagoOAuth }: AppDeps): Promi
   app.decorate('mercadoPago', {
     config: config.mercadoPago,
     oauth: config.mercadoPago ? (mercadoPagoOAuth ?? createMercadoPagoOAuth(config.mercadoPago)) : null,
+    orders: config.mercadoPago ? (mercadoPagoOrders ?? createMercadoPagoOrders()) : null,
   });
+  app.decorate('now', now ?? (() => new Date()));
   registerErrorHandling(app);
 
   await app.register(helmet);

@@ -14,6 +14,7 @@ const MP_ENV = {
   MP_CLIENT_ID: '1234567890',
   MP_CLIENT_SECRET: 'segredo-do-app',
   MP_REDIRECT_URI: 'https://mxpro.test/api/payments/mercadopago/callback',
+  MP_WEBHOOK_SECRET: 'segredo-do-webhook',
   PAYMENT_TOKEN_KEY: KEY.toString('base64'),
 };
 const MP_CONFIG = loadConfig({ DATABASE_URL: 'postgresql://x@localhost/x', ...MP_ENV }).mercadoPago!;

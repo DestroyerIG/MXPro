@@ -37,6 +37,7 @@ describe('loadConfig', () => {
       MP_CLIENT_ID: '123',
       MP_CLIENT_SECRET: 'segredo',
       MP_REDIRECT_URI: 'https://mxpro.test/api/payments/mercadopago/callback',
+      MP_WEBHOOK_SECRET: 'segredo-do-webhook',
       PAYMENT_TOKEN_KEY: key,
     };
 
