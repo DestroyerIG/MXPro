@@ -1,6 +1,7 @@
 // Schema do banco da MXPro (docs/arquitetura.md §5.2).
 // Fundação: usuários e perfis, sessões de login e configurações da marca.
 // Fase 2: campeonatos, eventos (etapas), catálogo de categorias, categorias do evento e baterias.
+// Fase 3: regras da prova versionadas. Fase 4: inscrições, pagamentos Pix e consentimentos (LGPD).
 // Convenções: tabelas e colunas em snake_case no banco (@@map/@map), camelCase no código;
 // datas em UTC (timestamptz); ids UUID.
 
@@ -41,6 +42,11 @@ model User {
   updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
   sessions           Session[]
   raceConfigVersions RaceConfigVersion[]
+  /// Inscrições do usuário como PILOTO.
+  registrations      Registration[]      @relation("RegistrationPilot")
+  /// Vistorias feitas pelo usuário (secretaria/organizador).
+  inspections        Registration[]      @relation("RegistrationInspector")
+  consents           Consent[]
 
   @@map("users")
 }
@@ -152,6 +158,7 @@ model Event {
   updatedAt               DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
   categories              EventCategory[]
   heats                   Heat[]
+  registrations           Registration[]
 
   @@unique([championshipId, stageNumber])
   @@index([startDate])
@@ -189,6 +196,7 @@ model EventCategory {
   updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
   heats         HeatCategory[]
   raceConfigs   RaceConfigVersion[]
+  registrations Registration[]
 
   @@unique([eventId, categoryId])
   /// Alvo da FK composta de HeatCategory (garante categoria e bateria do mesmo evento).
@@ -251,4 +259,137 @@ model RaceConfigVersion {
 
   @@unique([eventCategoryId, version])
   @@map("race_config_versions")
+}
+
+// ─── Fase 4: inscrições e pagamentos ────────────────────────────────────────────────────────
+// Decisões no ADR 0004 (docs/decisions/0004-inscricoes-e-pix.md).
+
+enum RegistrationStatus {
+  /// Aguardando o Pix. A vaga (e o nº de largada) fica reservada até `holdExpiresAt`.
+  PENDING_PAYMENT
+  /// Pagamento confirmado pelo webhook do gateway (ou baixa manual auditada).
+  CONFIRMED
+  /// O Pix venceu sem pagamento: vaga e número voltam a ficar livres.
+  EXPIRED
+  /// Cancelada pela organização (ou desistência). Mantida para histórico e financeiro.
+  CANCELED
+}
+
+/// Vistoria da moto e do equipamento no dia da prova (check-in da secretaria).
+enum InspectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  REFUNDED
+  CANCELED
+}
+
+/// Documentos aceitos pelo piloto (LGPD, docs/arquitetura.md §2.8).
+enum ConsentKind {
+  /// Política de privacidade: aceita ao criar a conta.
+  PRIVACY_POLICY
+  /// Termo de responsabilidade: aceito em CADA inscrição.
+  LIABILITY_WAIVER
+}
+
+/// Inscrição de um piloto numa categoria do evento. Um piloto pode correr mais de uma categoria
+/// no mesmo evento: cada uma é uma inscrição, com seu pagamento e seu nº de largada.
+model Registration {
+  id               String             @id @default(uuid(7)) @db.Uuid
+  eventId          String             @map("event_id") @db.Uuid
+  event            Event              @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  eventCategoryId  String             @map("event_category_id") @db.Uuid
+  /// FK composta: o BANCO garante que a categoria é deste evento.
+  eventCategory    EventCategory      @relation(fields: [eventCategoryId, eventId], references: [id, eventId], onDelete: Restrict)
+  pilotId          String             @map("pilot_id") @db.Uuid
+  pilot            User               @relation("RegistrationPilot", fields: [pilotId], references: [id], onDelete: Restrict)
+  /// Nº de largada como TEXTO ("05" e "5" são placas diferentes), de 1 a 3 dígitos.
+  /// Único por categoria do evento entre as inscrições ativas (índice parcial na migration).
+  raceNumber       String             @map("race_number") @db.VarChar(3)
+  /// Moto (ex.: "Honda CRF 250F").
+  bike             String
+  team             String?
+  status           RegistrationStatus @default(PENDING_PAYMENT)
+  /// Valor cobrado em CENTAVOS, copiado da categoria na hora da inscrição: mudar o preço
+  /// depois não altera inscrições já feitas.
+  entryFeeCents    Int                @map("entry_fee_cents")
+  /// Vaga reservada até aqui enquanto aguarda o Pix (30 min). Nulo fora de PENDING_PAYMENT.
+  holdExpiresAt    DateTime?          @map("hold_expires_at") @db.Timestamptz(3)
+  confirmedAt      DateTime?          @map("confirmed_at") @db.Timestamptz(3)
+  inspectionStatus InspectionStatus   @default(PENDING) @map("inspection_status")
+  inspectedAt      DateTime?          @map("inspected_at") @db.Timestamptz(3)
+  inspectedById    String?            @map("inspected_by_id") @db.Uuid
+  inspectedBy      User?              @relation("RegistrationInspector", fields: [inspectedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  payments         Payment[]
+  consents         Consent[]
+
+  @@index([eventId, status])
+  @@index([eventCategoryId, status])
+  @@index([pilotId])
+  @@map("registrations")
+}
+
+/// Cobrança Pix de uma inscrição. Uma inscrição pode ter várias (o Pix venceu e o piloto gerou
+/// outro). Quem marca PAGO é o webhook do gateway, nunca o front (docs/arquitetura.md §5.5).
+model Payment {
+  id               String        @id @default(uuid(7)) @db.Uuid
+  registrationId   String        @map("registration_id") @db.Uuid
+  registration     Registration  @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  /// Gateway que emitiu a cobrança ("fake" até o contratante definir o gateway).
+  provider         String
+  /// Id da cobrança no gateway (o webhook chega com ele).
+  providerChargeId String        @map("provider_charge_id")
+  amountCents      Int           @map("amount_cents")
+  status           PaymentStatus @default(PENDING)
+  /// Pix "copia e cola" (BR Code). O QR Code é desenhado a partir deste texto.
+  pixCopyPaste     String        @map("pix_copy_paste")
+  expiresAt        DateTime      @map("expires_at") @db.Timestamptz(3)
+  paidAt           DateTime?     @map("paid_at") @db.Timestamptz(3)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([provider, providerChargeId])
+  @@index([registrationId])
+  @@map("payments")
+}
+
+/// Cada notificação recebida do gateway, guardada como chegou. O unique por evento do gateway
+/// torna o webhook IDEMPOTENTE: a mesma notificação repetida é ignorada.
+model PaymentWebhookEvent {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  provider        String
+  providerEventId String    @map("provider_event_id")
+  payload         Json
+  receivedAt      DateTime  @default(now()) @map("received_at") @db.Timestamptz(3)
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz(3)
+
+  @@unique([provider, providerEventId])
+  @@map("payment_webhook_events")
+}
+
+/// Registro de consentimento (LGPD): o quê, qual versão do texto, quando e de onde.
+model Consent {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  user            User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  /// Inscrição em que o termo de responsabilidade foi aceito (nulo para a política de privacidade).
+  registrationId  String?       @map("registration_id") @db.Uuid
+  registration    Registration? @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  kind            ConsentKind
+  /// Versão do texto aceito (ex.: "2026-11"), para saber exatamente o que foi mostrado.
+  documentVersion String        @map("document_version")
+  acceptedAt      DateTime      @default(now()) @map("accepted_at") @db.Timestamptz(3)
+  ip              String?
+  userAgent       String?       @map("user_agent")
+
+  @@index([userId])
+  @@map("consents")
 }

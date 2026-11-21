@@ -88,12 +88,25 @@ export async function removeEventCategory(db: PrismaClient, eventId: string, id:
   if (ec._count.heats > 0) {
     throw new AppError(409, 'CATEGORY_IN_HEAT', 'Esta categoria está em baterias. Tire-a das baterias antes de removê-la.');
   }
+  const registrationsInCategory = () => db.registration.count({ where: { eventCategoryId: id } });
+  if ((await registrationsInCategory()) > 0) throw registrationsExist();
   if (event.status === 'PUBLISHED' && (await db.eventCategory.count({ where: { eventId } })) === 1) {
     throw new AppError(409, 'LAST_CATEGORY', 'Um evento publicado precisa de ao menos uma categoria.');
   }
-  // `heats: { none: {} }` no próprio comando: se alguém incluir a categoria numa bateria no meio, nada é apagado.
-  const { count } = await db.eventCategory.deleteMany({ where: { id, eventId, heats: { none: {} } } });
+  // As condições vão no próprio comando: se alguém incluir a categoria numa bateria (ou se inscrever)
+  // no meio, nada é apagado.
+  const { count } = await db.eventCategory.deleteMany({ where: { id, eventId, heats: { none: {} }, registrations: { none: {} } } });
   if (count === 0) {
+    if ((await registrationsInCategory()) > 0) throw registrationsExist();
     throw new AppError(409, 'CATEGORY_IN_HEAT', 'Esta categoria está em baterias. Tire-a das baterias antes de removê-la.');
   }
+}
+
+/** Inscrição (mesmo vencida ou cancelada) é histórico financeiro: a categoria fica no evento. */
+function registrationsExist(): AppError {
+  return new AppError(
+    409,
+    'CATEGORY_HAS_REGISTRATIONS',
+    'Esta categoria já tem inscrições e não pode sair do evento. Se ela não vai mais acontecer, cancele as inscrições.',
+  );
 }

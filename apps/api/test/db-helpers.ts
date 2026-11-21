@@ -15,7 +15,8 @@ export function testDb(): PrismaClient {
 /** Apaga os dados entre testes (o nome do banco contém "test": garantido no global-setup). */
 export async function resetDb(db: PrismaClient): Promise<void> {
   await db.$executeRawUnsafe(
-    'TRUNCATE TABLE "heat_categories", "heats", "event_categories", "events", "categories", "championships", ' +
+    'TRUNCATE TABLE "consents", "payment_webhook_events", "payments", "registrations", "race_config_versions", ' +
+      '"heat_categories", "heats", "event_categories", "events", "categories", "championships", ' +
       '"sessions", "users", "settings" RESTART IDENTITY CASCADE',
   );
 }
