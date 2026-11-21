@@ -1,0 +1,80 @@
+<header>
+  <h1 class="text-2xl font-bold">Financeiro</h1>
+  <p class="mt-1 max-w-2xl text-sm text-ink-2">
+    Conta que recebe os Pix das inscrições. Conciliação, estornos e baixas manuais chegam nas próximas etapas.
+  </p>
+</header>
+
+@if (result(); as r) {
+  <p
+    role="status"
+    class="mt-4 max-w-3xl rounded-md border-2 bg-surface px-4 py-3 text-sm font-bold"
+    [class.border-ok]="r.tone === 'ok'"
+    [class.border-warn]="r.tone === 'warn'"
+    [class.border-danger]="r.tone === 'danger'"
+    [class.text-danger-text]="r.tone === 'danger'"
+  >
+    {{ r.text }}
+  </p>
+}
+
+<ui-card class="mt-4 max-w-3xl" heading="Recebimento pelo Mercado Pago">
+  @if (!isOrganizer()) {
+    <p class="text-sm text-ink-2">Só o organizador vê e altera a conta que recebe as inscrições.</p>
+  } @else if (connection.value(); as c) {
+    @if (!c.configured) {
+      <p class="text-sm">
+        O servidor ainda não tem as credenciais do aplicativo do Mercado Pago. Quem instala o sistema precisa preencher
+        as variáveis <code>MP_CLIENT_ID</code>, <code>MP_CLIENT_SECRET</code>, <code>MP_REDIRECT_URI</code> e
+        <code>PAYMENT_TOKEN_KEY</code> (veja o <code>.env.example</code>). Depois disso, a conexão é feita aqui.
+      </p>
+    } @else if (account(); as a) {
+      <div class="flex flex-wrap items-center gap-2">
+        <ui-status-badge tone="ok">Conectada</ui-status-badge>
+        @if (!a.liveMode) {
+          <ui-status-badge tone="warn">Conta de teste</ui-status-badge>
+        }
+      </div>
+      <dl class="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
+        <dt class="text-ink-2">Conta no Mercado Pago</dt>
+        <dd class="font-bold">{{ a.mpUserId }}</dd>
+        <dt class="text-ink-2">Conectada em</dt>
+        <dd>{{ a.connectedAt }}{{ a.connectedBy ? ' por ' + a.connectedBy.name : '' }}</dd>
+        <dt class="text-ink-2">Acesso válido até</dt>
+        <dd>{{ a.expiresAt }} <span class="text-ink-2">(renovado automaticamente antes de vencer)</span></dd>
+      </dl>
+      <p class="mt-3 text-sm text-ink-2">
+        Os Pix das inscrições são gerados nesta conta. Para trocar de conta, desconecte e conecte a nova.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button uiButton type="button" variant="danger" [disabled]="busy()" (click)="disconnectDialog.open()">Desconectar</button>
+      </div>
+    } @else {
+      <p class="text-sm">
+        Conecte a conta do Mercado Pago que vai receber os pagamentos. Você será levado ao site do Mercado Pago para
+        entrar e autorizar; o sistema nunca vê a sua senha.
+      </p>
+      <div class="mt-4">
+        <button uiButton type="button" [disabled]="busy()" (click)="connect()">Conectar Mercado Pago</button>
+      </div>
+    }
+    @if (error(); as message) {
+      <p role="alert" class="mt-4 rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+    }
+  } @else if (connection.error()) {
+    <div role="alert">
+      <p class="font-bold">Não foi possível carregar a conta do Mercado Pago.</p>
+      <button uiButton class="mt-4" (click)="connection.reload()">Tentar de novo</button>
+    </div>
+  } @else {
+    <div aria-busy="true" class="h-24 animate-pulse rounded-md bg-line"><span class="sr-only">Carregando…</span></div>
+  }
+</ui-card>
+
+<ui-confirm-dialog #disconnectDialog heading="Desconectar o Mercado Pago?" confirmLabel="Desconectar" (confirmed)="disconnect()">
+  <p>
+    Enquanto nenhuma conta estiver conectada, os pilotos não conseguem pagar inscrições por Pix. Os pagamentos já
+    feitos continuam na conta do Mercado Pago. Para revogar o acesso também do lado do Mercado Pago, remova o
+    aplicativo nas configurações de segurança da conta.
+  </p>
+</ui-confirm-dialog>

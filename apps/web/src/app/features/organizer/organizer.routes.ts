@@ -43,7 +43,12 @@ export default [
         loadComponent: () => import('./events/category-rules/category-rules').then((m) => m.CategoryRules),
         title: 'Regras da prova | MXPro',
       },
-      ...ORGANIZER_NAV.filter((item) => !['', 'cronometragem', 'eventos', 'categorias'].includes(item.path)).map((item) => ({
+      {
+        path: 'financeiro',
+        loadComponent: () => import('./finance/finance-page').then((m) => m.FinancePage),
+        title: 'Financeiro | MXPro',
+      },
+      ...ORGANIZER_NAV.filter((item) => !['', 'cronometragem', 'eventos', 'categorias', 'financeiro'].includes(item.path)).map((item) => ({
         path: item.path,
         component: ComingSoon,
         title: `${item.label} | MXPro`,
