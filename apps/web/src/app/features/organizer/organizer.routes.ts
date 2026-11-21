@@ -17,7 +17,23 @@ export default [
     children: [
       { path: '', component: EventDashboard, title: 'Painel do evento | MXPro' },
       { path: 'cronometragem', component: TimingHub, title: 'Cronometragem | MXPro' },
-      ...ORGANIZER_NAV.filter((item) => item.path !== '' && item.path !== 'cronometragem').map((item) => ({
+      // Telas de eventos: loadComponent baixa cada uma só quando é aberta (o formulário é o maior pedaço).
+      {
+        path: 'eventos',
+        loadComponent: () => import('./events/events-list/events-list').then((m) => m.EventsList),
+        title: 'Eventos | MXPro',
+      },
+      {
+        path: 'eventos/novo',
+        loadComponent: () => import('./events/event-form/event-form').then((m) => m.EventForm),
+        title: 'Novo evento | MXPro',
+      },
+      {
+        path: 'eventos/:id',
+        loadComponent: () => import('./events/event-form/event-form').then((m) => m.EventForm),
+        title: 'Evento | MXPro',
+      },
+      ...ORGANIZER_NAV.filter((item) => !['', 'cronometragem', 'eventos'].includes(item.path)).map((item) => ({
         path: item.path,
         component: ComingSoon,
         title: `${item.label} | MXPro`,

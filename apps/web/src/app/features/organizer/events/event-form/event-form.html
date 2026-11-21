@@ -1,0 +1,194 @@
+<a routerLink="/painel/eventos" class="text-sm font-bold text-brand-text underline-offset-2 hover:underline">Voltar para eventos</a>
+
+@if (isNew() || event.hasValue()) {
+  <header class="mt-2 flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-bold">{{ isNew() ? 'Novo evento' : event.value()?.name }}</h1>
+      @if (event.value(); as e) {
+        <p class="mt-1 text-sm text-ink-2">
+          {{ period() }} • {{ e.venue }}, {{ e.city }}/{{ e.state }} • {{ e.categoryCount }} categorias • {{ e.heatCount }} baterias
+        </p>
+      }
+    </div>
+    <div class="flex flex-wrap gap-2">
+      @if (status(); as s) {
+        <ui-status-badge [tone]="s.tone">{{ s.label }}</ui-status-badge>
+      }
+      @if (registration(); as r) {
+        <ui-status-badge [tone]="r.tone">{{ r.label }}</ui-status-badge>
+      }
+    </div>
+  </header>
+
+  <!-- Ações do ciclo de vida (só organizador, só em evento existente e não congelado). -->
+  @if (event.value(); as e) {
+    @if (canEdit() && !locked()) {
+      <div class="mt-4 flex flex-wrap gap-2" aria-label="Ações do evento" role="group">
+        @if (e.status === 'DRAFT') {
+          <button uiButton type="button" [disabled]="busy()" (click)="publish()">Publicar evento</button>
+        }
+        @if (e.status === 'PUBLISHED') {
+          @if (e.registration.closedEarly) {
+            <button uiButton type="button" variant="secondary" [disabled]="busy()" (click)="setRegistrationClosed(false)">
+              Reabrir inscrições
+            </button>
+          } @else {
+            <button uiButton type="button" variant="secondary" [disabled]="busy()" (click)="setRegistrationClosed(true)">
+              Encerrar inscrições agora
+            </button>
+          }
+        }
+        <button uiButton type="button" variant="danger" [disabled]="busy()" (click)="cancelDialog.open()">Cancelar evento</button>
+        @if (deletable()) {
+          <button uiButton type="button" variant="danger" [disabled]="busy()" (click)="deleteDialog.open()">Excluir rascunho</button>
+        }
+      </div>
+      @if (actionError(); as message) {
+        <p role="alert" class="mt-3 rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+      }
+      @if (e.status === 'DRAFT' && e.categoryCount === 0 && !actionError()) {
+        <p class="mt-2 text-sm text-ink-2">Para publicar, o evento precisa de ao menos uma categoria.</p>
+      }
+    }
+    @if (locked()) {
+      <p class="mt-4 rounded-md border border-line-strong bg-surface px-4 py-3 text-sm">
+        Evento {{ status()?.label?.toLowerCase() }}: os dados ficam guardados para consulta e não podem mais ser alterados.
+      </p>
+    }
+  }
+
+  <form novalidate class="mt-6 grid max-w-3xl gap-4" (submit)="onSubmit($event)">
+    <ui-card heading="Dados do evento">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <ui-form-field class="sm:col-span-2" label="Nome do evento" required [error]="fieldError('name')">
+          <input uiControl type="text" [formField]="eventForm.name" placeholder="Ex.: Copa Verão de Motocross - Etapa 2" />
+        </ui-form-field>
+
+        <ui-form-field label="Campeonato" hint="Deixe avulso se não fizer parte de um campeonato." [error]="fieldError('championshipId')">
+          <select uiControl [formField]="eventForm.championshipId">
+            <option value="">Evento avulso</option>
+            @for (c of championships.value()?.championships ?? []; track c.id) {
+              <option [value]="c.id">{{ c.name }} {{ c.season }}</option>
+            }
+            @if (canEdit()) {
+              <option [value]="NEW_CHAMPIONSHIP">Novo campeonato…</option>
+            }
+          </select>
+        </ui-form-field>
+
+        <ui-form-field label="Nº da etapa" [error]="fieldError('stageNumber')">
+          <input uiControl type="text" inputmode="numeric" [formField]="eventForm.stageNumber" placeholder="Ex.: 2" />
+        </ui-form-field>
+
+        @if (creatingChampionship()) {
+          <!-- Mini-formulário: cria o campeonato e já o seleciona, sem sair da tela. -->
+          <div class="grid gap-3 rounded-md border border-line-strong p-3 sm:col-span-2 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-start">
+            <ui-form-field label="Nome do campeonato" required [error]="championshipFieldError('name') ?? championshipError()">
+              <input uiControl type="text" [formField]="championshipForm.name" placeholder="Ex.: Copa Verão de Motocross" />
+            </ui-form-field>
+            <ui-form-field label="Temporada" required [error]="championshipFieldError('season')">
+              <input uiControl type="number" [formField]="championshipForm.season" />
+            </ui-form-field>
+            <button uiButton type="button" variant="secondary" class="sm:mt-5" [disabled]="championshipForm().submitting()" (click)="createChampionship()">
+              Criar campeonato
+            </button>
+          </div>
+        }
+
+        <ui-form-field label="Data de início" required [error]="fieldError('startDate')">
+          <input uiControl type="date" [formField]="eventForm.startDate" />
+        </ui-form-field>
+        <ui-form-field label="Data de término" required hint="Igual à de início se for um dia só." [error]="fieldError('endDate')">
+          <input uiControl type="date" [formField]="eventForm.endDate" />
+        </ui-form-field>
+      </div>
+    </ui-card>
+
+    <ui-card heading="Local">
+      <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_6rem]">
+        <ui-form-field class="sm:col-span-3" label="Pista ou local" required [error]="fieldError('venue')">
+          <input uiControl type="text" [formField]="eventForm.venue" placeholder="Ex.: Pista Terra Vermelha" />
+        </ui-form-field>
+        <ui-form-field class="sm:col-span-2" label="Cidade" required [error]="fieldError('city')">
+          <input uiControl type="text" autocomplete="address-level2" [formField]="eventForm.city" />
+        </ui-form-field>
+        <ui-form-field label="UF" required [error]="fieldError('state')">
+          <select uiControl [formField]="eventForm.state">
+            <option value="">—</option>
+            @for (uf of states; track uf) {
+              <option [value]="uf">{{ uf }}</option>
+            }
+          </select>
+        </ui-form-field>
+        <ui-form-field class="sm:col-span-3" label="Fuso horário do evento" hint="Horários de baterias e inscrições são mostrados neste fuso." [error]="fieldError('timeZone')">
+          <select uiControl [formField]="eventForm.timeZone">
+            @for (tz of timeZones; track tz.id) {
+              <option [value]="tz.id">{{ tz.label }}</option>
+            }
+          </select>
+        </ui-form-field>
+      </div>
+    </ui-card>
+
+    <ui-card heading="Inscrições">
+      <p class="mb-4 text-sm text-ink-2">
+        As inscrições abrem e encerram sozinhas nessas datas (no fuso do evento), depois de o evento ser publicado.
+        Sem data de abertura, elas ficam fechadas.
+      </p>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <ui-form-field label="Abertura" [error]="fieldError('registrationOpensAt')">
+          <input uiControl type="datetime-local" [formField]="eventForm.registrationOpensAt" />
+        </ui-form-field>
+        <ui-form-field label="Encerramento" [error]="fieldError('registrationClosesAt')">
+          <input uiControl type="datetime-local" [formField]="eventForm.registrationClosesAt" />
+        </ui-form-field>
+      </div>
+    </ui-card>
+
+    @if (formError(); as message) {
+      <p role="alert" class="rounded-md border-2 border-danger bg-surface px-4 py-3 text-sm font-bold text-danger-text">{{ message }}</p>
+    }
+
+    @if (!readOnly()) {
+      <div class="flex flex-wrap justify-between gap-2">
+        <a uiButton variant="secondary" routerLink="/painel/eventos">Voltar</a>
+        <button uiButton type="submit" [disabled]="busy() || eventForm().submitting()">
+          {{ isNew() ? 'Criar evento' : 'Salvar alterações' }}
+        </button>
+      </div>
+    }
+  </form>
+
+  <ui-confirm-dialog #cancelDialog heading="Cancelar este evento?" confirmLabel="Cancelar evento" (confirmed)="cancelEvent()">
+    <p>O evento deixa de receber inscrições e não poderá mais ser alterado. Os dados ficam guardados.</p>
+    <label class="mt-3 block text-xs font-bold text-ink-2" for="cancel-reason">Motivo (opcional)</label>
+    <textarea
+      id="cancel-reason"
+      rows="3"
+      maxlength="500"
+      class="mt-1 w-full rounded-md border border-control bg-surface px-3 py-2 text-sm text-ink"
+      placeholder="Ex.: chuva forte, pista interditada"
+      [value]="cancelReason()"
+      (input)="cancelReason.set($any($event.target).value)"
+    ></textarea>
+  </ui-confirm-dialog>
+
+  <ui-confirm-dialog #deleteDialog heading="Excluir este rascunho?" confirmLabel="Excluir rascunho" (confirmed)="deleteEvent()">
+    <p>O rascunho será apagado de vez. Esta ação não pode ser desfeita.</p>
+  </ui-confirm-dialog>
+} @else if (event.error()) {
+  <div role="alert" class="mt-4 rounded-lg border-2 border-danger bg-surface p-6">
+    <p class="font-bold">Não foi possível abrir este evento.</p>
+    <p class="mt-1 text-ink-2">Ele pode ter sido excluído, ou a conexão caiu.</p>
+    <div class="mt-4 flex gap-2">
+      <button uiButton (click)="event.reload()">Tentar de novo</button>
+      <a uiButton variant="secondary" routerLink="/painel/eventos">Voltar para eventos</a>
+    </div>
+  </div>
+} @else {
+  <div aria-busy="true" class="mt-4 animate-pulse">
+    <span class="sr-only">Carregando o evento…</span>
+    <div class="h-8 w-2/3 rounded-md bg-line"></div>
+    <div class="mt-6 h-72 max-w-3xl rounded-lg bg-line"></div>
+  </div>
+}
