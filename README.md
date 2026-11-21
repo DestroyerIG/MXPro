@@ -222,6 +222,12 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `GET /api/users` | Equipe da organização — **somente organizador** |
 | `GET /api/settings/branding` | Marca do contratante (nome, destaque, cor, logo) — público |
 | `PUT /api/settings/branding` | Altera a marca — **somente organizador** |
+| `GET /api/championships` | Campeonatos com o número de etapas — organizador e secretaria |
+| `POST /api/championships` · `PATCH`/`DELETE /api/championships/:id` | Cria, renomeia e exclui (só sem etapas) — **somente organizador** |
+| `GET /api/events` · `GET /api/events/:id` | Eventos (filtros `status` e `championshipId`), com a janela de inscrição e se está aberta agora — organizador e secretaria |
+| `POST /api/events` · `PATCH /api/events/:id` | Cria (como rascunho) e edita; as regras entre campos valem no resultado da edição — **somente organizador** |
+| `POST /api/events/:id/publish` · `/cancel` | Publica (exige ao menos uma categoria) e cancela — **somente organizador** |
+| `DELETE /api/events/:id` | Exclui só rascunho vazio; os demais são cancelados — **somente organizador** |
 
 Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
 contra CSRF. Detalhes e motivos em [`docs/decisions/0002`](docs/decisions/0002-autenticacao-por-sessao-em-cookie.md).
