@@ -58,7 +58,7 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 
 > **Estado atual:** fundação (API, banco, login por perfil, CI) e cadastro de **eventos, categorias e baterias**
 > prontos, com o painel do evento mostrando dados reais. Cronometragem e telão ainda usam dados fictícios.
-> Inscrições com Pix, motor de regras e cronometragem offline real são as próximas fases (veja o [roadmap](#roadmap)).
+> Inscrições com Pix e cronometragem offline real são as próximas fases (veja o [roadmap](#roadmap)).
 
 ## Telas
 
@@ -95,6 +95,10 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 - **Eventos, categorias e baterias:** campeonatos e etapas (de um ou mais dias), publicar, encerrar inscrições,
   cancelar; categorias do evento com modalidade, valor em reais e vagas; programação de baterias com uma ou mais
   categorias. Catálogo único de categorias. Secretaria consulta; só o organizador altera.
+- **Regras da prova (Motocross):** tela por categoria com o modelo pronto do escopo (grid por sorteio, tempo + 2
+  voltas, volta mínima 0:45.000, +10 s por infração), tabela de pontos editável e desempate. O motor de regras calcula
+  resultado da bateria e geral do dia; depois da largada a configuração fica congelada e cada mudança vira uma nova
+  versão com motivo.
 - **Login por perfil:** cada perfil cai na sua área; sessão em cookie httpOnly; a cronometragem abre offline.
 - **Cronometragem para tablet** (dados fictícios até a fase 5):
   - um toque no cartão registra uma passagem;
@@ -109,8 +113,8 @@ Configurar → Inscrições → Check-in → Largada → Cronometragem → Resul
 
 ### Planejadas
 
-Inscrição pública com Pix e confirmação por webhook • check-in e vistoria • geração de grid • motor de regras
-configurável por modalidade • resultado oficial em PDF e planilha • campeonato com descarte e desempate • área do
+Inscrição pública com Pix e confirmação por webhook • check-in e vistoria • geração de grid • regras das demais
+modalidades • resultado oficial em PDF e planilha • campeonato com descarte e desempate • área do
 piloto • Enduro (especiais e controles de horário) • integração com transponder • LGPD (consentimento, exportação e
 anonimização).
 
@@ -209,6 +213,7 @@ No pacote do front (`apps/web`): `pnpm exec ng build`, `pnpm exec ng test --watc
 | `/painel/eventos` | Lista de eventos com filtro por status | Organizador / secretaria (só consulta) |
 | `/painel/eventos/novo` · `/painel/eventos/:id` | Criar e editar evento; publicar, encerrar/reabrir inscrições, cancelar e excluir rascunho | Organizador (secretaria vê sem editar) |
 | `/painel/eventos/:id?aba=categorias` · `?aba=baterias` | Categorias do evento (modalidade, valor em reais, vagas) e programação de baterias (uma ou mais categorias, horário no fuso do evento) | Organizador (secretaria vê sem editar) |
+| `/painel/eventos/:id/categorias/:eventCategoryId/regras` | Regras da prova da categoria: modelo pronto, largada, término, duração, baterias, volta mínima, penalidade, % mínimo para classificar, tabela de pontos e desempate. Depois da largada, mudar exige motivo e cria nova versão | Organizador (secretaria vê sem editar) |
 | `/painel/categorias` | Catálogo de categorias: criar, renomear, desativar e excluir as nunca usadas | Organizador (secretaria vê sem editar) |
 | `/painel/<área>` | Inscrições, Cronometragem, Resultados, Campeonato, Financeiro, Equipe | Organizador / secretaria |
 | `/cronometragem` | Tela de pista para tablet/celular | Cronometrista / organizador |
@@ -316,8 +321,8 @@ pnpm build
       cronometragem para tablet e telão ao vivo (dados fictícios)
 - [x] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • ~~CI~~ ✓
 - [x] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria, e painel do evento com dados reais
-- [ ] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • ~~resultado da bateria (tempo + voltas,
-      volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • tela de regras.
+- [x] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • ~~resultado da bateria (tempo + voltas,
+      volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • ~~tela de regras~~ ✓.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
