@@ -1,0 +1,78 @@
+# Integração contínua: a cada push na main e em todo pull request, confere se o projeto
+# continua de pé (Definição de Pronto, docs/arquitetura.md §10).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Só leitura: o pipeline não publica nada nem mexe no repositório.
+permissions:
+  contents: read
+
+# Um push novo cancela a execução anterior do mesmo branch (economiza minutos).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Tipos, lint, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Postgres de verdade para os testes de integração da API (mesma versão do docker-compose).
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: mxpro
+          POSTGRES_PASSWORD: mxpro_ci
+          POSTGRES_DB: mxpro
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U mxpro"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Valores só do CI: banco descartável e senha fictícia do seed (nenhum segredo real).
+    env:
+      DATABASE_URL: postgresql://mxpro:mxpro_ci@localhost:5432/mxpro?schema=public
+      TEST_DATABASE_URL: postgresql://mxpro:mxpro_ci@localhost:5432/mxpro_test?schema=public
+      SEED_PASSWORD: senha-ficticia-do-ci
+
+    steps:
+      # Actions fixadas pelo SHA do commit (a tag pode ser movida; o SHA não). Versão no comentário.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Usa a versão do pnpm declarada em "packageManager" no package.json.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Instalar dependências (exatamente as do lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Tipos (tsc --noEmit)
+        run: pnpm typecheck
+
+      - name: Lint (ESLint + angular-eslint)
+        run: pnpm lint
+
+      - name: Migrations do zero + seed
+        run: |
+          pnpm --filter @mxpro/db migrate:deploy
+          pnpm db:seed
+
+      - name: Testes (shared, API com Postgres, front)
+        run: pnpm test
+
+      - name: Build de produção do front
+        run: pnpm build
