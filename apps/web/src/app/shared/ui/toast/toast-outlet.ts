@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ToastService, ToastTone } from './toast.service';
+import { ToastService, type ToastTone } from './toast.service';
 
 const TONE_BORDER: Record<ToastTone, string> = {
   info: 'border-l-brand',

@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import { type Routes } from '@angular/router';
 import { DesignSystemPage } from './design-system-page';
 
 /** Catálogo de componentes (ferramenta de desenvolvimento). */

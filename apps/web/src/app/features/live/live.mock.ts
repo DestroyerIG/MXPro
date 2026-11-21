@@ -1,4 +1,4 @@
-import { LiveRow, LiveStandingsDto } from './live.model';
+import { type LiveRow, type LiveStandingsDto } from './live.model';
 
 /**
  * "SERVIDOR FICTÍCIO" do resultado ao vivo, só para demonstração enquanto não há API.

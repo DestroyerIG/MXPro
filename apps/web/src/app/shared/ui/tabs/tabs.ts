@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, input, model, viewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type ElementRef, input, model, viewChildren } from '@angular/core';
 
 export interface TabItem {
   id: string;
@@ -23,7 +23,7 @@ const IDLE = 'bg-surface border-line-strong text-ink hover:bg-zebra';
 @Component({
   selector: 'ui-tabs',
   template: `
-    <div role="tablist" [attr.aria-label]="label()" class="flex flex-wrap gap-2" (keydown)="onKeydown($event)">
+    <div role="tablist" [attr.aria-label]="label()" class="flex flex-wrap gap-2">
       @for (tab of tabs(); track tab.id) {
         <button
           #tabButton
@@ -34,6 +34,7 @@ const IDLE = 'bg-surface border-line-strong text-ink hover:bg-zebra';
           [attr.aria-selected]="tab.id === selected()"
           [tabIndex]="tab.id === selected() ? 0 : -1"
           (click)="selected.set(tab.id)"
+          (keydown)="onKeydown($event)"
         >
           {{ tab.label }}
         </button>

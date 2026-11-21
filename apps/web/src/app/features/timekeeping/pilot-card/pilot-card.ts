@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { formatPenalty, msToDisplay } from '../../../shared/format/race-time';
-import { PilotSummary } from '../timing-log';
+import { type PilotSummary } from '../timing-log';
 
 /** O que um toque no cartão faz agora. */
 export type TapMode = 'lap' | 'penalty' | 'dsq';

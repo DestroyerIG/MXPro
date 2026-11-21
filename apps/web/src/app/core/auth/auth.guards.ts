@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanMatchFn, RedirectFunction, Router } from '@angular/router';
+import { type CanMatchFn, type RedirectFunction, Router } from '@angular/router';
 import type { Role } from '@mxpro/shared';
 import { HOME_BY_ROLE, LOGIN_PAGE, SessionService, isSafeReturnUrl } from './session.service';
 

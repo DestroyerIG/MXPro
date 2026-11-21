@@ -4,8 +4,8 @@ import { formatCountdown, formatPenalty, msToDisplay } from '../../../shared/for
 import { Button } from '../../../shared/ui/button/button';
 import { StatusBadge } from '../../../shared/ui/status-badge/status-badge';
 import { ToastService } from '../../../shared/ui/toast/toast.service';
-import { PilotCard, TapMode } from '../pilot-card/pilot-card';
-import { TimingEvent } from '../timing.model';
+import { PilotCard, type TapMode } from '../pilot-card/pilot-card';
+import { type TimingEvent } from '../timing.model';
 import { TimingOutbox } from '../timing-outbox.service';
 import { TimingSession } from '../timing-session.service';
 

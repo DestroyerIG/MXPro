@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MOCK_EVENT_DASHBOARD } from './event-dashboard.mock';
-import { EventDashboardDto } from './event-dashboard.model';
+import { type EventDashboardDto } from './event-dashboard.model';
 import { EventDashboardService, toEventDashboard } from './event-dashboard.service';
 
 describe('toEventDashboard', () => {

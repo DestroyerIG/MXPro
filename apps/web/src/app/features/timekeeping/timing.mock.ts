@@ -1,4 +1,4 @@
-import { HeatEntry, HeatInfo, TimingEvent } from './timing.model';
+import { type HeatEntry, type HeatInfo, type TimingEvent } from './timing.model';
 
 /**
  * Dados FICTÍCIOS do escopo (PDF, página 6): Bateria 1 • MX2, cronometrista Ana Souza,

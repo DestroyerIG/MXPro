@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import { type Routes } from '@angular/router';
 import { ComingSoon } from '../../shared/coming-soon/coming-soon';
 import { EventDashboard } from './event-dashboard/event-dashboard';
 import { ORGANIZER_NAV } from './organizer-nav';

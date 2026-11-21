@@ -31,6 +31,8 @@ const SIZES: Record<ButtonSize, string> = {
  * Uso: <button uiButton variant="secondary" size="lg">Salvar</button>
  */
 @Component({
+  // Componente de ATRIBUTO de propósito (ver acima): a regra de seletor espera elemento "ui-*".
+  // eslint-disable-next-line @angular-eslint/component-selector
   selector: 'button[uiButton], a[uiButton]',
   template: '<ng-content />',
   // `host` aplica bindings no próprio elemento <button>. As classes que o consumidor escrever são mantidas.

@@ -1,4 +1,4 @@
-import { LiveGap } from '../../shared/format/race-time';
+import { type LiveGap } from '../../shared/format/race-time';
 
 /**
  * O que o servidor envia ao telão/página pública (docs/arquitetura.md §5.4): classificação JÁ CALCULADA

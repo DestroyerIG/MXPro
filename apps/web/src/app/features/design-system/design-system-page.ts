@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { BrandingService } from '../../core/branding/branding.service';
-import { ThemePreference, ThemeService } from '../../core/theme/theme.service';
+import { type ThemePreference, ThemeService } from '../../core/theme/theme.service';
 import { Button } from '../../shared/ui/button/button';
 import { Card } from '../../shared/ui/card/card';
 import { Control, FormField } from '../../shared/ui/form-field/form-field';
 import { StatTile } from '../../shared/ui/stat-tile/stat-tile';
-import { StatusBadge, StatusTone } from '../../shared/ui/status-badge/status-badge';
+import { StatusBadge, type StatusTone } from '../../shared/ui/status-badge/status-badge';
 import { Table } from '../../shared/ui/table/table';
-import { TabItem, Tabs } from '../../shared/ui/tabs/tabs';
+import { type TabItem, Tabs } from '../../shared/ui/tabs/tabs';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 
 interface DemoRegistration {

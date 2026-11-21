@@ -10,13 +10,23 @@ const config = loadConfig(process.env);
 const db = createPrismaClient(config.databaseUrl);
 const app = await buildApp({ config, db });
 
+async function shutdown(): Promise<void> {
+  await app.close();
+  await db.$disconnect();
+}
+
 // Desligamento limpo (Ctrl+C, deploy): para de aceitar conexões, termina as em andamento e fecha o banco.
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.once(signal, async () => {
+  process.once(signal, () => {
     app.log.info(`${signal} recebido, encerrando…`);
-    await app.close();
-    await db.$disconnect();
-    process.exit(0);
+    // process.once não espera promessas: o fim (e uma eventual falha ao fechar) é tratado aqui mesmo.
+    shutdown().then(
+      () => process.exit(0),
+      (err: unknown) => {
+        app.log.error(err, 'falha ao encerrar');
+        process.exit(1);
+      },
+    );
   });
 }
 

@@ -1,7 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
+  type ElementRef,
   Injector,
   afterNextRender,
   computed,
@@ -12,7 +12,7 @@ import {
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ROLE_LABELS } from '@mxpro/shared';
 import { SessionService } from '../../../core/auth/session.service';
-import { ThemePreference, ThemeService } from '../../../core/theme/theme.service';
+import { type ThemePreference, ThemeService } from '../../../core/theme/theme.service';
 import { BrandLogo } from '../../../shared/brand-logo/brand-logo';
 import { ORGANIZER_NAV } from '../organizer-nav';
 

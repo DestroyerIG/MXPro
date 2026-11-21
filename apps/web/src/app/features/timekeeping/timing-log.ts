@@ -1,4 +1,4 @@
-import { HeatEntry, TimingEvent } from './timing.model';
+import { type HeatEntry, type TimingEvent } from './timing.model';
 
 /**
  * Derivações do log de eventos de cronometragem (funções puras, sem Angular).

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MOCK_EVENT_DASHBOARD } from './event-dashboard.mock';
-import { EventDashboard, EventDashboardDto } from './event-dashboard.model';
+import { type EventDashboard, type EventDashboardDto } from './event-dashboard.model';
 
 /** Evento aberto no painel. Provisório: depois virá do seletor de evento / da URL. */
 export const CURRENT_EVENT_ID = MOCK_EVENT_DASHBOARD.event.id;

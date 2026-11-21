@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { TabItem, Tabs } from './tabs';
+import { type TabItem, Tabs } from './tabs';
 
 @Component({
   imports: [Tabs],
@@ -40,7 +40,9 @@ describe('Tabs', () => {
   it('setas navegam com volta circular; Home/End vão às pontas', async () => {
     const { fixture, tabs, host } = await setup();
     const press = async (key: string) => {
-      tabs[0].parentElement!.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      // A tecla nasce na aba que está com foco (a ativa), como acontece com o teclado de verdade.
+      const active = tabs.find((t) => t.getAttribute('aria-selected') === 'true')!;
+      active.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
       await fixture.whenStable();
     };
     await press('ArrowRight');

@@ -1,4 +1,4 @@
-import { EventDashboardDto } from './event-dashboard.model';
+import { type EventDashboardDto } from './event-dashboard.model';
 
 /**
  * Dados FICTÍCIOS do escopo (PDF, página 3), usados até a API existir.

@@ -1,6 +1,6 @@
 import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core';
 import { ConnectivityService } from '../../core/connectivity/connectivity.service';
-import { LiveRow, LiveStandingsDto } from './live.model';
+import { type LiveRow, type LiveStandingsDto } from './live.model';
 import { MOCK_ELAPSED_AT_OPEN_MS, mockStandings } from './live.mock';
 
 export interface LiveRowView extends LiveRow {

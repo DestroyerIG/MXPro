@@ -1,4 +1,4 @@
-import { HeatEntry, TimingEvent, TimingEventType } from './timing.model';
+import { type HeatEntry, type TimingEvent, type TimingEventType } from './timing.model';
 import { isFinished, lastUndoable, recentPasses, summarizePilots } from './timing-log';
 
 const START = 1_000_000;

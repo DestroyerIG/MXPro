@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+import { type Routes } from '@angular/router';
 import { TimingBoard } from './timing-board/timing-board';
 
 /** Rotas da cronometragem. Bundle separado e enxuto (docs/arquitetura.md §6). */

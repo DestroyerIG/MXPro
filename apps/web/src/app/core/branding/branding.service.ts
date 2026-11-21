@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { DOCUMENT, Injectable, inject, signal } from '@angular/core';
 import { type Branding, DEFAULT_BRANDING } from '@mxpro/shared';
 import { firstValueFrom, timeout } from 'rxjs';
-import { BrandPalette, deriveBrandPalette } from './color';
+import { type BrandPalette, deriveBrandPalette } from './color';
 
 export type { Branding };
 

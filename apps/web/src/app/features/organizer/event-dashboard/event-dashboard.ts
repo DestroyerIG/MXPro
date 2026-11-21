@@ -3,9 +3,9 @@ import { EventDatePipe } from '../../../shared/format/event-date.pipe';
 import { Button } from '../../../shared/ui/button/button';
 import { Card } from '../../../shared/ui/card/card';
 import { StatTile } from '../../../shared/ui/stat-tile/stat-tile';
-import { StatusBadge, StatusTone } from '../../../shared/ui/status-badge/status-badge';
-import { CategoryBarItem, CategoryBars } from './category-bars/category-bars';
-import { HeatStatus, RegistrationWindow } from './event-dashboard.model';
+import { StatusBadge, type StatusTone } from '../../../shared/ui/status-badge/status-badge';
+import { type CategoryBarItem, CategoryBars } from './category-bars/category-bars';
+import { type HeatStatus, type RegistrationWindow } from './event-dashboard.model';
 import { CURRENT_EVENT_ID, EventDashboardService } from './event-dashboard.service';
 
 /** Como cada estado de bateria aparece (texto + tom do badge). */
