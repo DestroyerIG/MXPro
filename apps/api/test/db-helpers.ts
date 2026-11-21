@@ -1,6 +1,6 @@
 import { hash } from '@node-rs/argon2';
 import { type PrismaClient, type Role, createPrismaClient } from '@mxpro/db';
-import { buildApp } from '../src/app.ts';
+import { type AppDeps, buildApp } from '../src/app.ts';
 import { loadConfig } from '../src/config.ts';
 import { DEFAULT_TEST_DATABASE_URL } from './global-setup.ts';
 import { TEST_ORIGIN } from './helpers.ts';
@@ -15,7 +15,7 @@ export function testDb(): PrismaClient {
 /** Apaga os dados entre testes (o nome do banco contém "test": garantido no global-setup). */
 export async function resetDb(db: PrismaClient): Promise<void> {
   await db.$executeRawUnsafe(
-    'TRUNCATE TABLE "consents", "payment_webhook_events", "payments", "registrations", "race_config_versions", ' +
+    'TRUNCATE TABLE "oauth_states", "mercado_pago_accounts", "consents", "payment_webhook_events", "payments", "registrations", "race_config_versions", ' +
       '"heat_categories", "heats", "event_categories", "events", "categories", "championships", ' +
       '"sessions", "users", "settings" RESTART IDENTITY CASCADE',
   );
@@ -27,9 +27,9 @@ export async function createUser(db: PrismaClient, data: { email: string; role: 
   return db.user.create({ data: { name: data.name ?? 'Usuário de Teste', passwordHash, ...data } });
 }
 
-export async function integrationApp(db: PrismaClient, env: Record<string, string> = {}) {
+export async function integrationApp(db: PrismaClient, env: Record<string, string> = {}, deps: Partial<Omit<AppDeps, 'config' | 'db'>> = {}) {
   const config = loadConfig({ NODE_ENV: 'test', DATABASE_URL: url, CORS_ORIGINS: TEST_ORIGIN, ...env });
-  return buildApp({ config, db });
+  return buildApp({ config, db, ...deps });
 }
 
 export const SESSION_COOKIE = 'mxpro_session';

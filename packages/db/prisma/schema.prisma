@@ -29,23 +29,25 @@ enum PublicNameDisplay {
 }
 
 model User {
-  id                 String              @id @default(uuid(7)) @db.Uuid
+  id                 String               @id @default(uuid(7)) @db.Uuid
   /// Sempre gravado em minúsculas (normalizado pela API).
-  email              String              @unique
+  email              String               @unique
   name               String
   /// Hash argon2id. A senha em texto nunca é armazenada.
-  passwordHash       String              @map("password_hash")
+  passwordHash       String               @map("password_hash")
   role               Role
   /// Usuário desativado não consegue logar e perde as sessões abertas.
-  active             Boolean             @default(true)
-  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  active             Boolean              @default(true)
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
   sessions           Session[]
   raceConfigVersions RaceConfigVersion[]
+  mercadoPagoAccount MercadoPagoAccount[]
+  oauthStates        OAuthState[]
   /// Inscrições do usuário como PILOTO.
-  registrations      Registration[]      @relation("RegistrationPilot")
+  registrations      Registration[]       @relation("RegistrationPilot")
   /// Vistorias feitas pelo usuário (secretaria/organizador).
-  inspections        Registration[]      @relation("RegistrationInspector")
+  inspections        Registration[]       @relation("RegistrationInspector")
   consents           Consent[]
 
   @@map("users")
@@ -343,7 +345,7 @@ model Payment {
   id               String        @id @default(uuid(7)) @db.Uuid
   registrationId   String        @map("registration_id") @db.Uuid
   registration     Registration  @relation(fields: [registrationId], references: [id], onDelete: Restrict)
-  /// Gateway que emitiu a cobrança ("fake" até o contratante definir o gateway).
+  /// Gateway que emitiu a cobrança ("mercadopago"; "seed" nos dados fictícios de desenvolvimento).
   provider         String
   /// Id da cobrança no gateway (o webhook chega com ele).
   providerChargeId String        @map("provider_charge_id")
@@ -392,4 +394,48 @@ model Consent {
 
   @@index([userId])
   @@map("consents")
+}
+
+// ─── Fase 4: conta do Mercado Pago do contratante (OAuth) ─────────────────────────────────
+// Decisões no ADR 0005 (docs/decisions/0005-mercado-pago-oauth.md).
+
+/// Conta do Mercado Pago que RECEBE as inscrições, conectada pelo organizador via OAuth.
+/// Single-tenant: existe no máximo UMA linha (id = 1). Os tokens ficam CRIPTOGRAFADOS
+/// (AES-256-GCM, chave em PAYMENT_TOKEN_KEY): quem ler o banco não consegue cobrar em nome do contratante.
+model MercadoPagoAccount {
+  id                    Int       @id @default(1)
+  /// Id do usuário (vendedor) no Mercado Pago.
+  mpUserId              String    @map("mp_user_id")
+  accessTokenEncrypted  String    @map("access_token_encrypted")
+  refreshTokenEncrypted String    @map("refresh_token_encrypted")
+  /// Chave pública (não é segredo).
+  publicKey             String?   @map("public_key")
+  scope                 String?
+  /// false = credenciais de teste (sandbox).
+  liveMode              Boolean   @map("live_mode")
+  /// Validade do access token (180 dias); renovado com o refresh token antes de vencer.
+  expiresAt             DateTime  @map("expires_at") @db.Timestamptz(3)
+  connectedById         String?   @map("connected_by_id") @db.Uuid
+  connectedBy           User?     @relation(fields: [connectedById], references: [id], onDelete: SetNull)
+  connectedAt           DateTime  @default(now()) @map("connected_at") @db.Timestamptz(3)
+  refreshedAt           DateTime? @map("refreshed_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("mercado_pago_accounts")
+}
+
+/// Tentativa de conexão OAuth em andamento. O `state` enviado ao Mercado Pago só existe aqui como
+/// HASH; vale 10 minutos, é de quem iniciou e só pode ser usado uma vez (contra CSRF no retorno).
+model OAuthState {
+  /// SHA-256 (hex) do state.
+  id           String   @id
+  userId       String   @map("user_id") @db.Uuid
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// PKCE: o segredo que prova, na troca do código, que fomos nós que iniciamos o fluxo.
+  codeVerifier String   @map("code_verifier")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@map("oauth_states")
 }

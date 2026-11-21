@@ -78,12 +78,12 @@ export async function seedRegistrations(prisma: PrismaClient, passwordHash: stri
 
     const payment = {
       registrationId,
-      provider: 'fake',
-      providerChargeId: `fake-seed-${p.raceNumber}-${p.category}`,
+      provider: 'seed', // dado fictício de desenvolvimento (não existe no Mercado Pago)
+      providerChargeId: `seed-${p.raceNumber}-${p.category}`,
       amountCents: FEES[p.category],
       status: p.paid ? ('PAID' as const) : ('PENDING' as const),
-      // Texto de exemplo: o gateway falso gera um BR Code de mentira (não é cobrável).
-      pixCopyPaste: `00020126MXPRO-FAKE-PIX-${p.raceNumber}5204000053039865802BR6304ABCD`,
+      // Texto de exemplo, não é um Pix cobrável.
+      pixCopyPaste: `00020126MXPRO-SEED-PIX-${p.raceNumber}5204000053039865802BR6304ABCD`,
       expiresAt: p.paid ? new Date(paidAt.getTime() + HOLD_MS) : holdUntil,
       paidAt: p.paid ? paidAt : null,
     };
