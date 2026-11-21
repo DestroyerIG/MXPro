@@ -204,7 +204,8 @@ do evento) → cobranças Pix, mais o registro dos consentimentos (LGPD). O banc
 é preciso um aplicativo no Mercado Pago ("Suas integrações"):
 1. cadastre nele a URL de retorno, igual a `MP_REDIRECT_URI`;
 2. habilite o PKCE;
-3. preencha as variáveis `MP_*` e `PAYMENT_TOKEN_KEY` no `.env` (veja o `.env.example`).
+3. cadastre o webhook (`/api/payments/mercadopago/webhook`, evento "Order") e preencha as variáveis `MP_*` e
+   `PAYMENT_TOKEN_KEY` no `.env` (veja o `.env.example`).
 
 Sem elas, a tela Financeiro explica o que falta e o resto do sistema funciona normalmente.
 
@@ -270,6 +271,7 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `GET`/`POST /api/events/:id/heats` · `PATCH`/`DELETE …/:heatId` | Baterias com uma ou mais categorias e horário dentro das datas do evento (no fuso dele). Só bateria programada é alterada |
 | `GET`/`DELETE /api/payments/mercadopago` | Conta do Mercado Pago conectada (sem tokens) / desconectar — **somente organizador** |
 | `POST /api/payments/mercadopago/connect` | Inicia a conexão OAuth: devolve a URL de autorização do Mercado Pago — **somente organizador** |
+| `POST /api/payments/mercadopago/webhook` | Aviso do Mercado Pago (tópico `order`), sem login: confere a assinatura `x-signature`, grava o aviso uma vez e aplica o estado **consultado** no Mercado Pago (Pix pago confirma a inscrição; vencido libera a vaga) |
 | `GET /api/payments/mercadopago/callback` | Retorno do Mercado Pago (navegação do navegador): confere o `state`, troca o código pelos tokens e volta para `/painel/financeiro?mercadopago=<resultado>` |
 
 Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
@@ -350,8 +352,8 @@ pnpm build
 - [x] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • ~~resultado da bateria (tempo + voltas,
       volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • ~~tela de regras~~ ✓.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
-- [ ] **Inscrição + Pix (Mercado Pago):** ~~modelo de dados~~ ✓ • ~~conexão da conta (OAuth)~~ ✓ • cobrança Pix e
-      webhook • API de inscrição • formulário público e pagamento • lista de inscritos, check-in e vistoria • grid.
+- [ ] **Inscrição + Pix (Mercado Pago):** ~~modelo de dados~~ ✓ • ~~conexão da conta (OAuth)~~ ✓ • ~~cobrança Pix e
+      webhook~~ ✓ • API de inscrição • formulário público e pagamento • lista de inscritos, check-in e vistoria • grid.
       Regras decididas nos ADRs [0004](docs/decisions/0004-inscricoes-e-pix.md) e [0005](docs/decisions/0005-mercado-pago-oauth.md)
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
 - [ ] **Resultados ao vivo:** WebSocket, página pública para celular, resultado oficial em PDF e planilha
