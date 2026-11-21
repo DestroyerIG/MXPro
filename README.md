@@ -240,6 +240,7 @@ aparelho, a cronometragem abre mesmo sem internet.
 | `DELETE /api/events/:id` | Exclui só rascunho vazio; os demais são cancelados — **somente organizador** |
 | `GET /api/categories` · `POST` · `PATCH`/`DELETE /api/categories/:id` | Catálogo de categorias (filtro `active`); categoria já usada é desativada, não excluída — leitura: organizador e secretaria; alteração: **somente organizador** |
 | `GET`/`POST /api/events/:id/categories` · `PATCH`/`DELETE …/:eventCategoryId` | Categorias do evento: modalidade, valor em centavos e vagas. Não sai do evento se estiver em bateria ou for a última de um evento publicado |
+| `GET`/`PUT /api/events/:id/categories/:eventCategoryId/rules` | Regras da prova da categoria (configuração versionada do motor). Sem nada salvo, devolve o modelo pronto. Depois da largada fica congelada: mudar exige motivo e cria nova versão — alteração: **somente organizador** |
 | `GET`/`POST /api/events/:id/heats` · `PATCH`/`DELETE …/:heatId` | Baterias com uma ou mais categorias e horário dentro das datas do evento (no fuso dele). Só bateria programada é alterada |
 
 Autenticação por sessão em cookie `httpOnly` com senha **argon2id**, autorização por perfil no back-end e proteção
@@ -316,7 +317,7 @@ pnpm build
 - [x] **Fundação:** ~~PostgreSQL + Prisma, seeds~~ ✓ • ~~API Fastify~~ ✓ • ~~autenticação e perfis de acesso (RBAC)~~ ✓ • ~~marca via API~~ ✓ • ~~login no front~~ ✓ • ~~CI~~ ✓
 - [x] **Eventos e categorias:** cadastro de campeonato, evento, categoria e bateria, e painel do evento com dados reais
 - [ ] **Motor de regras (Motocross):** ~~configuração versionada e modelo pronto~~ ✓ • ~~resultado da bateria (tempo + voltas,
-      volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • configuração por categoria (API) • tela de regras.
+      volta mínima, penalidades, DSQ)~~ ✓ • ~~pontos e desempate~~ ✓ • ~~configuração por categoria (API), congelada na largada~~ ✓ • tela de regras.
       Regras decididas no [ADR 0003](docs/decisions/0003-regras-do-motocross.md)
 - [ ] **Inscrição + Pix:** formulário público, pagamento, webhook, check-in, vistoria, número de largada e grid
 - [ ] **Cronometragem offline real:** fila no IndexedDB, service worker, sincronização idempotente, auditoria
