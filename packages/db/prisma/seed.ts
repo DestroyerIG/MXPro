@@ -7,6 +7,7 @@
 import { hash } from '@node-rs/argon2';
 import { config } from 'dotenv';
 import { type Role, SETTINGS_ID, createPrismaClient } from '../src/index.ts';
+import { seedEvents } from './seed-events.ts';
 
 config({ path: new URL('../../../.env', import.meta.url) });
 
@@ -48,8 +49,15 @@ try {
     });
   }
 
-  const [users, settings] = await Promise.all([prisma.user.count(), prisma.settings.count()]);
-  console.log(`Seed concluído: ${users} usuários, ${settings} configuração da marca.`);
+  await seedEvents(prisma);
+
+  const [users, settings, events, heats] = await Promise.all([
+    prisma.user.count(),
+    prisma.settings.count(),
+    prisma.event.count(),
+    prisma.heat.count(),
+  ]);
+  console.log(`Seed concluído: ${users} usuários, ${settings} configuração da marca, ${events} eventos, ${heats} baterias.`);
   console.log(`Logins: ${USERS.map((u) => `${u.email} (${u.role})`).join(', ')} — senha: SEED_PASSWORD do .env`);
 } finally {
   await prisma.$disconnect();

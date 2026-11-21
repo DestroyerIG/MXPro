@@ -1,5 +1,6 @@
 // Schema do banco da MXPro (docs/arquitetura.md §5.2).
-// Fase de fundação: usuários e perfis, sessões de login e configurações da marca.
+// Fundação: usuários e perfis, sessões de login e configurações da marca.
+// Fase 2: campeonatos, eventos (etapas), catálogo de categorias, categorias do evento e baterias.
 // Convenções: tabelas e colunas em snake_case no banco (@@map/@map), camelCase no código;
 // datas em UTC (timestamptz); ids UUID.
 
@@ -75,4 +76,153 @@ model Settings {
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("settings")
+}
+
+// ─── Fase 2: eventos e categorias ───────────────────────────────────────────────────────────
+
+/// Modalidades do escopo (§4.7). Fica na CATEGORIA do evento: um mesmo evento pode ter
+/// Motocross e Cross Country (ex.: Copa Verão – Etapa 2).
+enum Modality {
+  MOTOCROSS
+  ENDURO
+  ENDURO_REGULARITY
+  CROSS_COUNTRY
+  SUPERCROSS
+  CUSTOM
+}
+
+/// Ciclo de vida do evento. Evento com dados vinculados é CANCELADO, nunca apagado.
+enum EventStatus {
+  /// Em montagem: só a equipe vê.
+  DRAFT
+  /// Publicado: aparece para pilotos e público (inscrições seguem as datas).
+  PUBLISHED
+  FINISHED
+  CANCELED
+}
+
+enum HeatStatus {
+  SCHEDULED
+  IN_PROGRESS
+  FINISHED
+  CANCELED
+}
+
+/// Campeonato (ex.: "Copa Verão de Motocross" 2027). Agrupa etapas para o ranking (fase 7).
+model Championship {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  name      String
+  /// Temporada (ano). Nome + temporada identificam o campeonato.
+  season    Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  events    Event[]
+
+  @@unique([name, season])
+  @@map("championships")
+}
+
+/// Evento = um dia (ou mais) de prova. Pode ser uma etapa de campeonato ou avulso.
+model Event {
+  id                      String          @id @default(uuid(7)) @db.Uuid
+  /// Nulo = evento avulso (fora de campeonato).
+  championshipId          String?         @map("championship_id") @db.Uuid
+  championship            Championship?   @relation(fields: [championshipId], references: [id], onDelete: Restrict)
+  /// Número da etapa no campeonato (1, 2, 3…). Só existe quando há campeonato.
+  stageNumber             Int?            @map("stage_number")
+  name                    String
+  /// Datas do calendário no fuso do evento (sem hora). Evento de vários dias: start < end.
+  startDate               DateTime        @map("start_date") @db.Date
+  endDate                 DateTime        @map("end_date") @db.Date
+  /// Fuso IANA usado para exibir horários (datas no banco sempre em UTC).
+  timeZone                String          @default("America/Sao_Paulo") @map("time_zone")
+  /// Local da prova (ex.: "Pista Terra Vermelha").
+  venue                   String
+  city                    String
+  /// UF com 2 letras maiúsculas.
+  state                   String          @db.Char(2)
+  status                  EventStatus     @default(DRAFT)
+  /// Janela de inscrições. Fora dela (ou fechada manualmente) ninguém se inscreve.
+  registrationOpensAt     DateTime?       @map("registration_opens_at") @db.Timestamptz(3)
+  registrationClosesAt    DateTime?       @map("registration_closes_at") @db.Timestamptz(3)
+  /// "Fechar inscrições agora" (ex.: vagas esgotadas), mesmo dentro da janela.
+  registrationClosedEarly Boolean         @default(false) @map("registration_closed_early")
+  createdAt               DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  categories              EventCategory[]
+  heats                   Heat[]
+
+  @@unique([championshipId, stageNumber])
+  @@index([startDate])
+  @@map("events")
+}
+
+/// Catálogo de categorias (MX1, MX2, Feminino…). A MESMA categoria em todas as etapas permite
+/// somar pontos no campeonato. Categoria em uso não é apagada: é desativada.
+model Category {
+  id          String          @id @default(uuid(7)) @db.Uuid
+  /// Único sem diferenciar maiúsculas (índice em lower(name) na migration).
+  name        String
+  description String?
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  events      EventCategory[]
+
+  @@map("categories")
+}
+
+/// Categoria disputada num evento: modalidade, valor da inscrição e vagas.
+model EventCategory {
+  id            String         @id @default(uuid(7)) @db.Uuid
+  eventId       String         @map("event_id") @db.Uuid
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  categoryId    String         @map("category_id") @db.Uuid
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  modality      Modality
+  /// Valor da inscrição em CENTAVOS (dinheiro nunca em float).
+  entryFeeCents Int            @map("entry_fee_cents")
+  /// Limite de inscritos. Nulo = sem limite.
+  maxEntries    Int?           @map("max_entries")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  heats         HeatCategory[]
+
+  @@unique([eventId, categoryId])
+  /// Alvo da FK composta de HeatCategory (garante categoria e bateria do mesmo evento).
+  @@unique([id, eventId])
+  @@map("event_categories")
+}
+
+/// Bateria (largada). Pode juntar mais de uma categoria na pista; cada piloto é classificado na sua.
+model Heat {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  eventId     String         @map("event_id") @db.Uuid
+  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  /// Nome exibido (ex.: "Bateria 1", "Final").
+  name        String
+  /// Horário previsto da largada (UTC). Nulo = a definir.
+  scheduledAt DateTime?      @map("scheduled_at") @db.Timestamptz(3)
+  status      HeatStatus     @default(SCHEDULED)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  categories  HeatCategory[]
+
+  @@unique([id, eventId])
+  @@index([eventId, scheduledAt])
+  @@map("heats")
+}
+
+/// Categorias que largam numa bateria. O event_id repetido aqui é de propósito: com as FKs
+/// compostas, o BANCO recusa ligar uma bateria a uma categoria de outro evento.
+model HeatCategory {
+  heatId          String        @map("heat_id") @db.Uuid
+  eventCategoryId String        @map("event_category_id") @db.Uuid
+  eventId         String        @map("event_id") @db.Uuid
+  heat            Heat          @relation(fields: [heatId, eventId], references: [id, eventId], onDelete: Cascade)
+  eventCategory   EventCategory @relation(fields: [eventCategoryId, eventId], references: [id, eventId], onDelete: NoAction)
+
+  @@id([heatId, eventCategoryId])
+  @@index([eventCategoryId])
+  @@map("heat_categories")
 }

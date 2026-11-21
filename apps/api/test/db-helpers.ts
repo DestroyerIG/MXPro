@@ -14,7 +14,10 @@ export function testDb(): PrismaClient {
 
 /** Apaga os dados entre testes (o nome do banco contém "test": garantido no global-setup). */
 export async function resetDb(db: PrismaClient): Promise<void> {
-  await db.$executeRawUnsafe('TRUNCATE TABLE "sessions", "users", "settings" RESTART IDENTITY CASCADE');
+  await db.$executeRawUnsafe(
+    'TRUNCATE TABLE "heat_categories", "heats", "event_categories", "events", "categories", "championships", ' +
+      '"sessions", "users", "settings" RESTART IDENTITY CASCADE',
+  );
 }
 
 let passwordHash: string | undefined;
