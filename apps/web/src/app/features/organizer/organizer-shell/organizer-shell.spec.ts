@@ -16,6 +16,10 @@ describe('OrganizerShell (layout do painel)', () => {
   async function open(url: string) {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(url);
+    // /painel abre o painel do evento, que busca a lista de eventos: responde vazio (o foco aqui é o menu).
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.inject(HttpTestingController).match('/api/events').forEach((r) => r.flush({ events: [] }));
+    await harness.fixture.whenStable();
     const root = harness.routeNativeElement as HTMLElement;
     const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('nav[aria-label="Menu do organizador"] a'));
     return { harness, root, links };

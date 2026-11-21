@@ -98,8 +98,11 @@ describe('LoginPage (/entrar)', () => {
     await send();
     http.expectOne(LOGIN_URL).flush(sessionResponse('ORGANIZER'));
     await settle();
-    await harness.fixture.whenStable();
+    await settle();
     expect(TestBed.inject(Router).url).toBe('/painel');
+    // O painel já pediu a lista de eventos: responde para a tela poder estabilizar.
+    http.match('/api/events').forEach((r) => r.flush({ events: [] }));
+    await harness.fixture.whenStable();
   });
 
   it('senha errada: mostra a mensagem da API, limpa a senha e mantém o e-mail', async () => {
